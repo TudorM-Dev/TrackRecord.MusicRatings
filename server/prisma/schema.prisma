@@ -1,14 +1,15 @@
 model User {
-  id              Int          @id @default(autoincrement())
-  email           String       @unique
-  username        String       @unique
-  displayName     String
-  passwordHash    String
-  bio             String       @default("")
-  createdAt       DateTime     @default(now())
-  ratings         Rating[]
-  sentRequests    Friendship[] @relation("SentRequests")
+  id               Int          @id @default(autoincrement())
+  email            String       @unique
+  username         String       @unique
+  displayName      String
+  passwordHash     String
+  bio              String       @default("")
+  createdAt        DateTime     @default(now())
+  ratings          Rating[]
+  sentRequests     Friendship[] @relation("SentRequests")
   receivedRequests Friendship[] @relation("ReceivedRequests")
+  sessions         Session[]
 }
 
 model Release {
@@ -22,14 +23,13 @@ model Release {
   ratings     Rating[]
 }
 
-
 model Rating {
   id        Int      @id @default(autoincrement())
   userId    Int
   releaseId Int
   user      User     @relation(fields: [userId], references: [id])
   release   Release  @relation(fields: [releaseId], references: [id])
-  score     Int      
+  score     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -47,6 +47,14 @@ model Friendship {
   updatedAt   DateTime @updatedAt
 
   @@unique([requesterId, receiverId])
+}
+
+model Session {
+  id     String @id @default(uuid())
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 }
 
 generator client {
