@@ -9,3 +9,12 @@ Content-Type: application/json
   "username": "tudorm",
   "password": "parola123"
 }
+
+### Login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "tudor@example.com",
+  "password": "parola123"
+}
