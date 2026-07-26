@@ -1,7 +1,11 @@
 @host = http://localhost:3000
 
-GET {{host}}/api/releases
+### Register
+POST {{host}}/api/auth/register
+Content-Type: application/json
 
-
-GET {{host}}/api/health
-
+{
+  "email": "tudor@example.com",
+  "username": "tudorm",
+  "password": "parola123"
+}
