@@ -1,3 +1,7 @@
 @host = http://localhost:3000
 
+GET {{host}}/api/releases
+
+
 GET {{host}}/api/health
+
