@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import type { FriendshipStatus } from "../types.js";
+import type { Request, Response } from "express";
 
 const PENDING: FriendshipStatus = "PENDING";
 const ACCEPTED: FriendshipStatus = "ACCEPTED";
@@ -78,5 +79,58 @@ router.post("/requests", requireAuth, async (req, res) => {
 
   res.status(201).json(friendship);
 });
+
+router.post("/requests/:id/accept", requireAuth, respondToRequest(ACCEPTED));
+router.post("/requests/:id/decline", requireAuth, respondToRequest(DECLINED));
+
+function respondToRequest(newStatus: FriendshipStatus) {
+  return async (req: Request, res: Response) => {
+    const me = req.user;
+    if (!me) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+
+    const friendship = await prisma.friendship.findUnique({ where: { id } });
+    if (!friendship) {
+      res.status(404).json({ error: "Request not found" });
+      return;
+    }
+
+    const isReceiver = friendship.receiverId === me.id;
+    const isRequester = friendship.requesterId === me.id;
+
+    // not part of this friendship: don't reveal that it exists
+    if (!isReceiver && !isRequester) {
+      res.status(404).json({ error: "Request not found" });
+      return;
+    }
+
+    if (isRequester) {
+      res
+        .status(403)
+        .json({ error: "Only the receiver can decline a request" });
+      return;
+    }
+
+    if (friendship.status !== PENDING) {
+      res.status(409).json({ error: "Request is not pending" });
+      return;
+    }
+
+    const updated = await prisma.friendship.update({
+      where: { id },
+      data: { status: DECLINED },
+    });
+
+    res.json(updated);
+  };
+}
 
 export default router;

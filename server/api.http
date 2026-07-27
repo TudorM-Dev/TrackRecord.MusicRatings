@@ -5,8 +5,8 @@ POST {{host}}/api/auth/register
 Content-Type: application/json
 
 {
-  "email": "tudor@example.com",
-  "username": "tudorm",
+  "email": "ana@example.com",
+  "username": "ana",
   "password": "parola123"
 }
 
@@ -18,3 +18,9 @@ Content-Type: application/json
   "email": "tudor@example.com",
   "password": "parola123"
 }
+
+### Send friend request
+POST {{host}}/api/friends/requests
+Content-Type: application/json
+
+{ "target": "tudorm" }
