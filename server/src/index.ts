@@ -1,6 +1,7 @@
 import express from "express";
 import releasesRouter from "./routes/releases.js";
 import authRouter from "./routes/auth.js";
+import friendsRouter from "./routes/friends.js";
 import cookieParser from "cookie-parser";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +22,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/releases", releasesRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/friends", friendsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
