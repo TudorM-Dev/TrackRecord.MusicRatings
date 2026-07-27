@@ -126,7 +126,7 @@ function respondToRequest(newStatus: FriendshipStatus) {
 
     const updated = await prisma.friendship.update({
       where: { id },
-      data: { status: DECLINED },
+      data: { status: newStatus },
     });
 
     res.json(updated);
