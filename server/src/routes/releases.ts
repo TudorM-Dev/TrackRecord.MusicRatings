@@ -22,7 +22,18 @@ router.get("/:id", async (req, res) => {
     res.status(404).json({ error: "Release not found" });
     return;
   }
-  res.json(release);
+
+  const stats = await prisma.rating.aggregate({
+    where: { releaseId: id },
+    _avg: { score: true },
+    _count: true,
+  });
+
+  res.json({
+    ...release,
+    averageScore: stats._avg.score,
+    ratingCount: stats._count,
+  });
 });
 
 router.put("/:id/rating", requireAuth, async (req, res) => {
