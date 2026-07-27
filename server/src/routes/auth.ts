@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { prisma } from "../prisma.js";
 import { randomBytes } from "node:crypto";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -94,6 +95,28 @@ router.post("/login", async (req, res) => {
     username: user.username,
     displayName: user.displayName,
   });
+});
+
+router.get("/me", requireAuth, async (req, res) => {
+  if (!req.user) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+
+  res.json({
+    id: req.user.id,
+    email: req.user.email,
+    username: req.user.username,
+    displayName: req.user.displayName,
+    bio: req.user.bio,
+  });
+});
+
+router.post("/logout", requireAuth, async (req, res) => {
+  const token = req.cookies.session;
+  await prisma.session.delete({ where: { id: token } });
+  res.clearCookie("session");
+  res.status(204).end();
 });
 
 export default router;

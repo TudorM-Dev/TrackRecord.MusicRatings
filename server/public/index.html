@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TrackRecord — API debug</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        margin: 0 auto;
+        padding: 2rem 1rem 4rem;
+        max-width: 40rem;
+        background: #14161a;
+        color: #e6e6e6;
+        line-height: 1.5;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+      }
+      p.sub {
+        margin-top: 0;
+        color: #8b8f96;
+        font-size: 0.875rem;
+      }
+      fieldset {
+        border: 1px solid #2a2e35;
+        border-radius: 8px;
+        margin: 0 0 1rem;
+        padding: 1rem;
+      }
+      legend {
+        padding: 0 0.4rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+      input {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        border: 1px solid #2a2e35;
+        border-radius: 6px;
+        background: #0e1013;
+        color: inherit;
+        font: inherit;
+      }
+      button {
+        padding: 0.5rem 0.9rem;
+        border: 0;
+        border-radius: 6px;
+        background: #3b6ef6;
+        color: #fff;
+        font: inherit;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #2a2e35;
+      }
+      pre {
+        margin: 0;
+        padding: 1rem;
+        border-radius: 8px;
+        background: #0e1013;
+        border: 1px solid #2a2e35;
+        overflow-x: auto;
+        font-size: 0.8125rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .status {
+        font-weight: 600;
+      }
+      .ok {
+        color: #4ade80;
+      }
+      .err {
+        color: #f87171;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>TrackRecord — API debug</h1>
+
+    <fieldset>
+      <legend>Register</legend>
+      <input id="reg-email" type="email" placeholder="email" />
+      <input id="reg-username" type="text" placeholder="username" />
+      <input id="reg-password" type="password" placeholder="password (min 8)" />
+      <button data-action="register">POST /api/auth/register</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Login</legend>
+      <input id="log-email" type="email" placeholder="email" />
+      <input id="log-password" type="password" placeholder="password" />
+      <button data-action="login">POST /api/auth/login</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Session</legend>
+      <button data-action="me">GET /api/auth/me</button>
+      <button data-action="logout" class="secondary">
+        POST /api/auth/logout
+      </button>
+      <button data-action="cookie" class="secondary">
+        Read document.cookie
+      </button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Releases</legend>
+      <button data-action="releases" class="secondary">
+        GET /api/releases
+      </button>
+    </fieldset>
+
+    <pre id="output">Ready.</pre>
+
+    <script>
+      const output = document.getElementById("output");
+      const value = (id) => document.getElementById(id).value;
+
+      function show(status, body) {
+        const cls = status >= 200 && status < 300 ? "ok" : "err";
+        output.innerHTML =
+          `<span class="status ${cls}">${status}</span>\n\n` +
+          JSON.stringify(body, null, 2);
+      }
+
+      async function call(method, url, body) {
+        try {
+          const res = await fetch(url, {
+            method,
+            headers: body ? { "Content-Type": "application/json" } : undefined,
+            body: body ? JSON.stringify(body) : undefined,
+          });
+          // 204 has no body to parse
+          const data = res.status === 204 ? null : await res.json();
+          show(res.status, data);
+        } catch (err) {
+          output.textContent = "Request failed: " + err.message;
+        }
+      }
+
+      const actions = {
+        register: () =>
+          call("POST", "/api/auth/register", {
+            email: value("reg-email"),
+            username: value("reg-username"),
+            password: value("reg-password"),
+          }),
+        login: () =>
+          call("POST", "/api/auth/login", {
+            email: value("log-email"),
+            password: value("log-password"),
+          }),
+        me: () => call("GET", "/api/auth/me"),
+        logout: () => call("POST", "/api/auth/logout"),
+        releases: () => call("GET", "/api/releases"),
+        cookie: () => {
+          output.textContent =
+            "document.cookie = " +
+            JSON.stringify(document.cookie) +
+            "\n\nEmpty means the session cookie is HttpOnly: page scripts cannot read it.";
+        },
+      };
+
+      document.querySelectorAll("button[data-action]").forEach((btn) => {
+        btn.addEventListener("click", () => actions[btn.dataset.action]());
+      });
+    </script>
+  </body>
+</html>
