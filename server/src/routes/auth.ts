@@ -6,11 +6,8 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
-// 10 is the recommended floor and takes ~250ms on the B1 tier; 12 was closer
-// to a second there. Existing hashes keep their own cost, stored inside them.
 const BCRYPT_COST = Number(process.env.BCRYPT_COST ?? 10);
 
-// REGISTER
 router.post("/register", async (req, res) => {
   const { email, username, password } = req.body;
 
@@ -52,7 +49,6 @@ router.post("/register", async (req, res) => {
   });
 });
 
-// LOGIN
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -80,7 +76,7 @@ router.post("/login", async (req, res) => {
 
   const token = randomBytes(32).toString("hex");
 
-  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
 
   await prisma.session.create({
     data: { id: token, userId: user.id, expiresAt },
@@ -98,6 +94,7 @@ router.post("/login", async (req, res) => {
     email: user.email,
     username: user.username,
     displayName: user.displayName,
+    role: user.role,
   });
 });
 
@@ -113,6 +110,7 @@ router.get("/me", requireAuth, async (req, res) => {
     username: req.user.username,
     displayName: req.user.displayName,
     bio: req.user.bio,
+    role: req.user.role,
   });
 });
 

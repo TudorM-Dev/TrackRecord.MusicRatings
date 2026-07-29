@@ -11,6 +11,7 @@ async function request<T>(
   method: string,
   url: string,
   body?: unknown,
+  signal?: AbortSignal,
 ): Promise<T> {
   const response = await fetch(url, {
     method,
@@ -18,6 +19,7 @@ async function request<T>(
       body === undefined ? undefined : { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
     credentials: "same-origin",
+    signal,
   });
 
   if (response.status === 204) {
@@ -33,8 +35,13 @@ async function request<T>(
   return data as T;
 }
 
+export function isAbort(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
 export const api = {
-  get: <T>(url: string) => request<T>("GET", url),
+  get: <T>(url: string, signal?: AbortSignal) =>
+    request<T>("GET", url, undefined, signal),
   post: <T>(url: string, body?: unknown) => request<T>("POST", url, body),
   put: <T>(url: string, body?: unknown) => request<T>("PUT", url, body),
   patch: <T>(url: string, body?: unknown) => request<T>("PATCH", url, body),

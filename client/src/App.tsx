@@ -7,6 +7,7 @@ import SearchPage from "./pages/SearchPage";
 import ReleasePage from "./pages/ReleasePage";
 import ProfilePage from "./pages/ProfilePage";
 import FriendsPage from "./pages/FriendsPage";
+import AdminPage from "./pages/AdminPage";
 
 function Masthead() {
   const { user, logout } = useAuth();
@@ -29,6 +30,11 @@ function Masthead() {
           <NavLink to="/friends" className="navlink">
             friends
           </NavLink>
+          {user.role === "ADMIN" && (
+            <NavLink to="/admin" className="navlink">
+              admin
+            </NavLink>
+          )}
           <button className="navlink" onClick={() => void logout()}>
             log out
           </button>
@@ -114,6 +120,14 @@ export default function App() {
           element={
             <Guarded>
               <FriendsPage />
+            </Guarded>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <Guarded>
+              <AdminPage />
             </Guarded>
           }
         />
