@@ -23,7 +23,52 @@ function getRelationship(
   return "none";
 }
 
-// GET /api/users/:username
+router.patch("/me", requireAuth, async (req, res) => {
+  const me = req.user;
+  if (!me) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+
+  const { displayName, bio } = req.body;
+
+  if (displayName !== undefined && typeof displayName !== "string") {
+    res.status(400).json({ error: "Invalid displayName" });
+    return;
+  }
+
+  if (bio !== undefined && typeof bio !== "string") {
+    res.status(400).json({ error: "Invalid bio" });
+    return;
+  }
+
+  if (displayName !== undefined && displayName.trim().length === 0) {
+    res.status(400).json({ error: "Display name cannot be empty" });
+    return;
+  }
+
+  if (bio !== undefined && bio.length > 500) {
+    res.status(400).json({ error: "Bio is too long" });
+    return;
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: me.id },
+    data: {
+      ...(displayName !== undefined && { displayName: displayName.trim() }),
+      ...(bio !== undefined && { bio }),
+    },
+  });
+
+  res.json({
+    id: updated.id,
+    email: updated.email,
+    username: updated.username,
+    displayName: updated.displayName,
+    bio: updated.bio,
+  });
+});
+
 router.get("/:username", requireAuth, async (req, res) => {
   const me = req.user;
   if (!me) {
@@ -50,37 +95,42 @@ router.get("/:username", requireAuth, async (req, res) => {
     displayName: user.displayName,
   };
 
+  let relationship: Relationship;
+
   if (user.id === me.id) {
-    res.json({
-      ...publicProfile,
-      bio: user.bio,
-      createdAt: user.createdAt,
-      relationship: "self",
+    relationship = "self";
+  } else {
+    const friendship = await prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { requesterId: me.id, receiverId: user.id },
+          { requesterId: user.id, receiverId: me.id },
+        ],
+      },
     });
-    return;
+    relationship = getRelationship(friendship, me.id);
   }
 
-  const friendship = await prisma.friendship.findFirst({
-    where: {
-      OR: [
-        { requesterId: me.id, receiverId: user.id },
-        { requesterId: user.id, receiverId: me.id },
-      ],
-    },
-  });
+  const canSeeFullProfile =
+    relationship === "self" || relationship === "friends";
 
-  const relationship = getRelationship(friendship, me.id);
-
-  if (relationship !== "friends") {
+  if (!canSeeFullProfile) {
     res.json({ ...publicProfile, relationship });
     return;
   }
 
+  const ratings = await prisma.rating.findMany({
+    where: { userId: user.id },
+    orderBy: { updatedAt: "desc" },
+    include: { release: true },
+  });
+
   res.json({
     ...publicProfile,
+    relationship,
     bio: user.bio,
     createdAt: user.createdAt,
-    relationship,
+    ratings,
   });
 });
 

@@ -1,16 +1,78 @@
 import { Router } from "express";
+import type { Request, Response } from "express";
 import { prisma } from "../prisma.js";
 import { requireAuth } from "../middleware/auth.js";
-import type { FriendshipStatus } from "../types.js";
-import type { Request, Response } from "express";
-
-const PENDING: FriendshipStatus = "PENDING";
-const ACCEPTED: FriendshipStatus = "ACCEPTED";
-const DECLINED: FriendshipStatus = "DECLINED";
+import {
+  ACCEPTED,
+  DECLINED,
+  PENDING,
+  type FriendshipStatus,
+} from "../types.js";
 
 const router = Router();
 
-// POST /api/friends/requests
+const publicUserSelect = { id: true, username: true, displayName: true };
+
+router.get("/", requireAuth, async (req, res) => {
+  const me = req.user;
+  if (!me) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+
+  const friendships = await prisma.friendship.findMany({
+    where: {
+      status: ACCEPTED,
+      OR: [{ requesterId: me.id }, { receiverId: me.id }],
+    },
+    include: {
+      requester: { select: publicUserSelect },
+      receiver: { select: publicUserSelect },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  const friends = friendships.map((friendship) =>
+    friendship.requesterId === me.id
+      ? friendship.receiver
+      : friendship.requester,
+  );
+
+  res.json(friends);
+});
+
+router.get("/requests", requireAuth, async (req, res) => {
+  const me = req.user;
+  if (!me) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+
+  const requests = await prisma.friendship.findMany({
+    where: { status: PENDING, receiverId: me.id },
+    include: { requester: { select: publicUserSelect } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  res.json(requests);
+});
+
+router.get("/requests/sent", requireAuth, async (req, res) => {
+  const me = req.user;
+  if (!me) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+
+  const requests = await prisma.friendship.findMany({
+    where: { status: PENDING, requesterId: me.id },
+    include: { receiver: { select: publicUserSelect } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  res.json(requests);
+});
+
 router.post("/requests", requireAuth, async (req, res) => {
   const me = req.user;
   const { target } = req.body;
@@ -106,7 +168,6 @@ function respondToRequest(newStatus: FriendshipStatus) {
     const isReceiver = friendship.receiverId === me.id;
     const isRequester = friendship.requesterId === me.id;
 
-    // not part of this friendship: don't reveal that it exists
     if (!isReceiver && !isRequester) {
       res.status(404).json({ error: "Request not found" });
       return;
@@ -115,7 +176,7 @@ function respondToRequest(newStatus: FriendshipStatus) {
     if (isRequester) {
       res
         .status(403)
-        .json({ error: "Only the receiver can decline a request" });
+        .json({ error: "Only the receiver can respond to this request" });
       return;
     }
 
@@ -132,5 +193,43 @@ function respondToRequest(newStatus: FriendshipStatus) {
     res.json(updated);
   };
 }
+
+router.delete("/:username", requireAuth, async (req, res) => {
+  const me = req.user;
+  if (!me) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+
+  const { username } = req.params;
+  if (typeof username !== "string") {
+    res.status(400).json({ error: "Invalid username" });
+    return;
+  }
+
+  const other = await prisma.user.findUnique({ where: { username } });
+  if (!other) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const friendship = await prisma.friendship.findFirst({
+    where: {
+      OR: [
+        { requesterId: me.id, receiverId: other.id },
+        { requesterId: other.id, receiverId: me.id },
+      ],
+    },
+  });
+
+  if (!friendship) {
+    res.status(404).json({ error: "Friendship not found" });
+    return;
+  }
+
+  await prisma.friendship.delete({ where: { id: friendship.id } });
+
+  res.status(204).end();
+});
 
 export default router;

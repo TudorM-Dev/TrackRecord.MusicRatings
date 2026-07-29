@@ -14,7 +14,7 @@ model User {
 
 model Release {
   id          Int      @id @default(autoincrement())
-  spotifyId   String   @unique
+  externalId  String   @unique
   title       String
   artist      String
   releaseYear Int
