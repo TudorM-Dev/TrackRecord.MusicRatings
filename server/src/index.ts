@@ -14,6 +14,12 @@ import musicRouter from "./routes/music.js";
 const app = express();
 const PORT = Number(process.env.PORT ?? 3000);
 
+// Azure terminates HTTPS in front of us. Without this, Express sees plain HTTP
+// and refuses to set the secure session cookie, so nobody can log in.
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientDist = path.join(__dirname, "../../client/dist");
 const clientIndex = path.join(clientDist, "index.html");

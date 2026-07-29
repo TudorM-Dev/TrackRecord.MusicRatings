@@ -1,0 +1,49 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: trackrecord
+  NODE_VERSION: "22.x"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build client
+        working-directory: client
+        run: |
+          npm ci
+          npm run build
+
+      # better-sqlite3 is compiled here, on Linux, because that is what App
+      # Service runs. A Windows build of it would not load there.
+      - name: Build server
+        working-directory: server
+        run: |
+          npm ci
+          npm run build
+
+      - name: Assemble deployment package
+        run: |
+          mkdir -p package/client package/server
+          cp -r client/dist package/client/dist
+          cp -r server/dist server/node_modules server/prisma package/server/
+          cp server/package.json server/package-lock.json server/prisma.config.ts package/server/
+          cp startup.sh package/
+
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: package
