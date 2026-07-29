@@ -98,6 +98,7 @@ router.post("/login", async (req, res) => {
     email: user.email,
     username: user.username,
     displayName: user.displayName,
+    role: user.role,
   });
 });
 
@@ -113,6 +114,7 @@ router.get("/me", requireAuth, async (req, res) => {
     username: req.user.username,
     displayName: req.user.displayName,
     bio: req.user.bio,
+    role: req.user.role,
   });
 });
 

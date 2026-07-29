@@ -1,14 +1,16 @@
 model User {
-  id               Int          @id @default(autoincrement())
-  email            String       @unique
-  username         String       @unique
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  username         String         @unique
   displayName      String
   passwordHash     String
-  bio              String       @default("")
-  createdAt        DateTime     @default(now())
+  bio              String         @default("")
+  role             String         @default("USER") // USER, ADMIN
+  createdAt        DateTime       @default(now())
   ratings          Rating[]
-  sentRequests     Friendship[] @relation("SentRequests")
-  receivedRequests Friendship[] @relation("ReceivedRequests")
+  verdicts         TrackVerdict[]
+  sentRequests     Friendship[]   @relation("SentRequests")
+  receivedRequests Friendship[]   @relation("ReceivedRequests")
   sessions         Session[]
 }
 
@@ -21,6 +23,7 @@ model Release {
   kind        String   @default("ALBUM")
   coverUrl    String   @default("")
   ratings     Rating[]
+  tracks      Track[]
 }
 
 model Rating {
@@ -34,6 +37,31 @@ model Rating {
   updatedAt DateTime @updatedAt
 
   @@unique([releaseId, userId])
+}
+
+model Track {
+  id          Int            @id @default(autoincrement())
+  externalId  String         @unique
+  releaseId   Int
+  release     Release        @relation(fields: [releaseId], references: [id])
+  title       String
+  trackNumber Int
+  discNumber  Int            @default(1)
+  verdicts    TrackVerdict[]
+}
+
+// A thumbs up or down on a single track, separate from the album score.
+model TrackVerdict {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  trackId   Int
+  user      User     @relation(fields: [userId], references: [id])
+  track     Track    @relation(fields: [trackId], references: [id])
+  verdict   String // GOOD, BAD
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, trackId])
 }
 
 model Friendship {

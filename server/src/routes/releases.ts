@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { prisma } from "../prisma.js";
 import { optionalAuth, requireAuth } from "../middleware/auth.js";
-import { getMusicRelease } from "../music.js";
+import { getAlbumTracks, getMusicRelease } from "../music.js";
+import { BAD, GOOD } from "../types.js";
 
 const router = Router();
 
@@ -31,9 +32,13 @@ router.post("/", requireAuth, async (req, res) => {
     return;
   }
 
+  // trackCount is context for the search list, not a column on Release
+  const { trackCount, ...columns } = details;
+
+  // the lookup decides the real kind, so key off the id it gives back
   const release = await prisma.release.upsert({
-    where: { externalId: details.externalId },
-    create: details,
+    where: { externalId: columns.externalId },
+    create: columns,
     update: {},
   });
 
@@ -123,6 +128,114 @@ router.delete("/:id/rating", requireAuth, async (req, res) => {
 
   // deleteMany instead of delete: no error when there is nothing to remove
   await prisma.rating.deleteMany({ where: { releaseId: id, userId: me.id } });
+
+  res.status(204).end();
+});
+
+// GET /api/releases/:id/tracks
+// Tracks are imported the first time somebody opens the album, the same way
+// releases are: we only store what people actually look at.
+router.get("/:id/tracks", optionalAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  const release = await prisma.release.findUnique({ where: { id } });
+  if (!release) {
+    res.status(404).json({ error: "Release not found" });
+    return;
+  }
+
+  let tracks = await prisma.track.findMany({
+    where: { releaseId: id },
+    orderBy: [{ discNumber: "asc" }, { trackNumber: "asc" }],
+  });
+
+  if (tracks.length === 0 && release.kind === "ALBUM") {
+    const fetched = await getAlbumTracks(release.externalId);
+
+    if (fetched.length > 0) {
+      await prisma.track.createMany({
+        data: fetched.map((track) => ({ ...track, releaseId: id })),
+      });
+
+      tracks = await prisma.track.findMany({
+        where: { releaseId: id },
+        orderBy: [{ discNumber: "asc" }, { trackNumber: "asc" }],
+      });
+    }
+  }
+
+  const myVerdicts = req.user
+    ? await prisma.trackVerdict.findMany({
+        where: { userId: req.user.id, trackId: { in: tracks.map((t) => t.id) } },
+      })
+    : [];
+
+  const verdictByTrack = new Map(myVerdicts.map((v) => [v.trackId, v.verdict]));
+
+  res.json(
+    tracks.map((track) => ({
+      id: track.id,
+      title: track.title,
+      trackNumber: track.trackNumber,
+      discNumber: track.discNumber,
+      myVerdict: verdictByTrack.get(track.id) ?? null,
+    })),
+  );
+});
+
+// PUT /api/releases/:id/tracks/:trackId/verdict
+router.put("/:id/tracks/:trackId/verdict", requireAuth, async (req, res) => {
+  const me = req.user;
+  if (!me) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+
+  const trackId = Number(req.params.trackId);
+  if (Number.isNaN(trackId)) {
+    res.status(400).json({ error: "Invalid track id" });
+    return;
+  }
+
+  const { verdict } = req.body;
+  if (verdict !== GOOD && verdict !== BAD) {
+    res.status(400).json({ error: "Verdict must be GOOD or BAD" });
+    return;
+  }
+
+  const track = await prisma.track.findUnique({ where: { id: trackId } });
+  if (!track) {
+    res.status(404).json({ error: "Track not found" });
+    return;
+  }
+
+  const saved = await prisma.trackVerdict.upsert({
+    where: { userId_trackId: { userId: me.id, trackId } },
+    create: { userId: me.id, trackId, verdict },
+    update: { verdict },
+  });
+
+  res.json({ trackId, verdict: saved.verdict });
+});
+
+router.delete("/:id/tracks/:trackId/verdict", requireAuth, async (req, res) => {
+  const me = req.user;
+  if (!me) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+
+  const trackId = Number(req.params.trackId);
+  if (Number.isNaN(trackId)) {
+    res.status(400).json({ error: "Invalid track id" });
+    return;
+  }
+
+  await prisma.trackVerdict.deleteMany({ where: { userId: me.id, trackId } });
 
   res.status(204).end();
 });

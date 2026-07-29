@@ -1,0 +1,5 @@
+* text=auto
+
+# Prisma checksums every applied migration; a CRLF conversion changes the file
+# and makes Prisma think the migration was edited after the fact.
+*.sql text eol=lf

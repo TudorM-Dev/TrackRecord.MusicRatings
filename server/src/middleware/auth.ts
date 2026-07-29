@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { prisma } from "../prisma.js";
+import { ADMIN } from "../types.js";
 
 async function resolveSessionUser(req: Request, res: Response) {
   const token = req.cookies.session;
@@ -31,6 +32,24 @@ export async function requireAuth(
 
   if (!user) {
     res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+
+  req.user = user;
+  next();
+}
+
+// 404 rather than 403 for non-admins: an admin area nobody else should know
+// about is better hidden than announced.
+export async function requireAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const user = await resolveSessionUser(req, res);
+
+  if (!user || user.role !== ADMIN) {
+    res.status(404).json({ error: "Not found" });
     return;
   }
 

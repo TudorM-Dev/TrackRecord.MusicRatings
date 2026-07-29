@@ -10,6 +10,8 @@ import authRouter from "./routes/auth.js";
 import friendsRouter from "./routes/friends.js";
 import usersRouter from "./routes/users.js";
 import musicRouter from "./routes/music.js";
+import adminRouter from "./routes/admin.js";
+import { ensureAdminAccount } from "./seed.js";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 3000);
@@ -39,6 +41,7 @@ app.use("/api/users", usersRouter);
 app.use("/api/friends", friendsRouter);
 app.use("/api/releases", releasesRouter);
 app.use("/api/music", musicRouter);
+app.use("/api/admin", adminRouter);
 
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/")) {
@@ -68,6 +71,8 @@ app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
 
   res.status(500).json({ error: "Internal server error" });
 });
+
+await ensureAdminAccount();
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
