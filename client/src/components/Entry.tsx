@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { CSSProperties, ReactNode } from "react";
+import { formatScore } from "../format";
 
 type EntryProps = {
   score?: number | null;
@@ -22,7 +23,11 @@ function Inner({
   return (
     <>
       <span
-        className="score"
+        className={
+          score !== null && score !== undefined && !Number.isInteger(score)
+            ? "score fractional"
+            : "score"
+        }
         style={
           {
             "--weight": (score ?? 0) / 10,
@@ -30,7 +35,7 @@ function Inner({
           } as CSSProperties
         }
       >
-        {score ?? "–"}
+        {score === null || score === undefined ? "–" : formatScore(score)}
       </span>
       <img
         className="cover"

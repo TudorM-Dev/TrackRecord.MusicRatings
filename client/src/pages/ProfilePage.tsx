@@ -110,14 +110,13 @@ export default function ProfilePage() {
         {profile.relationship === "pending_received" && (
           <>wants to be friends · </>
         )}
-        {/* counts only exist when the server let us see the ratings */}
         {profile.ratings ? (
           <>
             <b>{ratings.length}</b> rated
             {average !== null && (
               <>
                 {" · avg "}
-                <b>{average.toFixed(1)}</b>
+                <b>{average.toFixed(2)}</b>
               </>
             )}
           </>

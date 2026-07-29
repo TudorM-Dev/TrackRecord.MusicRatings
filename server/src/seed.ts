@@ -2,9 +2,6 @@ import bcrypt from "bcryptjs";
 import { prisma } from "./prisma.js";
 import { ADMIN } from "./types.js";
 
-// Creates the admin account from environment variables on boot, so a fresh
-// deployment has one without anybody registering it by hand. Does nothing when
-// the variables are absent.
 export async function ensureAdminAccount() {
   const email = process.env.ADMIN_EMAIL?.toLowerCase();
   const password = process.env.ADMIN_PASSWORD;

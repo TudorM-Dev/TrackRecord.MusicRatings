@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api";
+import { formatScore } from "../format";
 import type { ReleaseDetail, Track, Verdict } from "../types";
 
 const SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const DEFAULT_SCORE = 7;
 
 export default function ReleasePage() {
   const { id } = useParams();
   const [release, setRelease] = useState<ReleaseDetail | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [draft, setDraft] = useState<number | null>(null);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -20,6 +23,7 @@ export default function ReleasePage() {
       ]);
       setRelease(detail);
       setTracks(trackList);
+      setDraft(null);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Could not load release");
     }
@@ -42,13 +46,14 @@ export default function ReleasePage() {
     }
   }
 
-  // Clicking the verdict you already gave removes it, like a toggle.
+  function saveScore(score: number) {
+    return change(() => api.put(`/api/releases/${id}/rating`, { score }));
+  }
+
   function setVerdict(track: Track, verdict: Verdict) {
     const url = `/api/releases/${id}/tracks/${track.id}/verdict`;
     return change(() =>
-      track.myVerdict === verdict
-        ? api.del(url)
-        : api.put(url, { verdict }),
+      track.myVerdict === verdict ? api.del(url) : api.put(url, { verdict }),
     );
   }
 
@@ -56,6 +61,8 @@ export default function ReleasePage() {
     return <p className="loading">{notice || "Loading…"}</p>;
   }
 
+  const current = draft ?? release.myScore ?? DEFAULT_SCORE;
+  const rated = release.myScore !== null;
   const good = tracks.filter((t) => t.myVerdict === "GOOD").length;
   const bad = tracks.filter((t) => t.myVerdict === "BAD").length;
 
@@ -71,7 +78,7 @@ export default function ReleasePage() {
         <div>
           <p className="eyebrow">
             {release.kind === "ALBUM" ? "album" : "single"} ·{" "}
-            {release.releaseYear}
+            {release.releaseYear || "—"}
           </p>
           <h1 className="headline">{release.title}</h1>
           <p className="meta">{release.artist}</p>
@@ -84,7 +91,7 @@ export default function ReleasePage() {
             ) : (
               <>
                 <span className="average-value">
-                  {release.averageScore.toFixed(1)}
+                  {release.averageScore.toFixed(2)}
                 </span>
                 <span className="meta" style={{ margin: 0 }}>
                   from {release.ratingCount}{" "}
@@ -95,28 +102,65 @@ export default function ReleasePage() {
           </div>
 
           <div className="section-rule" style={{ marginTop: "2.5rem" }}>
-            <h2>{release.myScore === null ? "rate the album" : "your score"}</h2>
+            <h2>{rated ? "your score" : "rate the album"}</h2>
           </div>
 
-          <div className="dial">
-            {SCORES.map((score) => (
-              <button
-                key={score}
-                aria-pressed={release.myScore === score}
-                aria-label={`Rate ${score} out of 10`}
-                disabled={busy}
-                onClick={() =>
-                  void change(() =>
-                    api.put(`/api/releases/${id}/rating`, { score }),
-                  )
+          <div className="scorer">
+            <div className="scorer-readout">
+              <span
+                className={
+                  rated || draft !== null
+                    ? "scorer-value"
+                    : "scorer-value empty"
                 }
               >
-                {score}
-              </button>
-            ))}
+                {formatScore(current)}
+              </span>
+              <span className="meta" style={{ margin: 0 }}>
+                {draft !== null && draft !== release.myScore
+                  ? "release to save"
+                  : rated
+                    ? "out of 10"
+                    : "drag or pick a number"}
+              </span>
+            </div>
+
+            <div className="dial">
+              {SCORES.map((score) => (
+                <button
+                  key={score}
+                  aria-pressed={release.myScore === score}
+                  aria-label={`Rate ${score} out of 10`}
+                  disabled={busy}
+                  onClick={() => void saveScore(score)}
+                >
+                  {score}
+                </button>
+              ))}
+            </div>
+
+            <input
+              className="slider"
+              type="range"
+              min={1}
+              max={10}
+              step={0.05}
+              value={current}
+              disabled={busy}
+              aria-label="Score out of 10"
+              onChange={(e) => setDraft(Number(e.target.value))}
+              onPointerUp={() => draft !== null && void saveScore(draft)}
+              onKeyUp={() => draft !== null && void saveScore(draft)}
+            />
+
+            <div className="slider-scale">
+              <span>1</span>
+              <span>5</span>
+              <span>10</span>
+            </div>
           </div>
 
-          {release.myScore !== null && (
+          {rated && (
             <div className="actions" style={{ marginTop: "1rem" }}>
               <button
                 className="btn warn small"
@@ -140,7 +184,10 @@ export default function ReleasePage() {
             <h2>
               track by track
               {(good > 0 || bad > 0) && (
-                <> · {good} kept · {bad} skipped</>
+                <>
+                  {" "}
+                  · {good} kept · {bad} skipped
+                </>
               )}
             </h2>
           </div>

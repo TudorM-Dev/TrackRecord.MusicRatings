@@ -39,8 +39,6 @@ export async function requireAuth(
   next();
 }
 
-// 404 rather than 403 for non-admins: an admin area nobody else should know
-// about is better hidden than announced.
 export async function requireAdmin(
   req: Request,
   res: Response,

@@ -7,7 +7,6 @@ const router = Router();
 
 router.use(requireAdmin);
 
-// GET /api/admin/stats
 router.get("/stats", async (req, res) => {
   const [users, releases, tracks, ratings, verdicts, friendships, pending] =
     await Promise.all([
@@ -34,7 +33,6 @@ router.get("/stats", async (req, res) => {
   });
 });
 
-// GET /api/admin/users
 router.get("/users", async (req, res) => {
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
@@ -52,7 +50,6 @@ router.get("/users", async (req, res) => {
   res.json(users);
 });
 
-// PATCH /api/admin/users/:id/role
 router.patch("/users/:id/role", async (req, res) => {
   const me = req.user;
   const id = Number(req.params.id);
@@ -68,7 +65,6 @@ router.patch("/users/:id/role", async (req, res) => {
     return;
   }
 
-  // Locking yourself out of the admin area is not a recoverable mistake.
   if (me && me.id === id && role === USER) {
     res.status(400).json({ error: "You cannot remove your own admin role" });
     return;
@@ -83,7 +79,6 @@ router.patch("/users/:id/role", async (req, res) => {
   res.json(user);
 });
 
-// DELETE /api/admin/users/:id
 router.delete("/users/:id", async (req, res) => {
   const me = req.user;
   const id = Number(req.params.id);
@@ -104,8 +99,6 @@ router.delete("/users/:id", async (req, res) => {
     return;
   }
 
-  // SQLite has no cascading delete here, so the rows that point at this user
-  // have to go first or the foreign keys reject the delete.
   await prisma.$transaction([
     prisma.session.deleteMany({ where: { userId: id } }),
     prisma.rating.deleteMany({ where: { userId: id } }),
@@ -119,7 +112,6 @@ router.delete("/users/:id", async (req, res) => {
   res.status(204).end();
 });
 
-// GET /api/admin/releases
 router.get("/releases", async (req, res) => {
   const releases = await prisma.release.findMany({
     orderBy: { id: "desc" },
@@ -129,7 +121,6 @@ router.get("/releases", async (req, res) => {
   res.json(releases);
 });
 
-// DELETE /api/admin/releases/:id
 router.delete("/releases/:id", async (req, res) => {
   const id = Number(req.params.id);
 

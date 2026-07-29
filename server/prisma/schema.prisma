@@ -5,7 +5,7 @@ model User {
   displayName      String
   passwordHash     String
   bio              String         @default("")
-  role             String         @default("USER") // USER, ADMIN
+  role             String         @default("USER")
   createdAt        DateTime       @default(now())
   ratings          Rating[]
   verdicts         TrackVerdict[]
@@ -32,7 +32,7 @@ model Rating {
   releaseId Int
   user      User     @relation(fields: [userId], references: [id])
   release   Release  @relation(fields: [releaseId], references: [id])
-  score     Int
+  score     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -50,14 +50,13 @@ model Track {
   verdicts    TrackVerdict[]
 }
 
-// A thumbs up or down on a single track, separate from the album score.
 model TrackVerdict {
   id        Int      @id @default(autoincrement())
   userId    Int
   trackId   Int
   user      User     @relation(fields: [userId], references: [id])
   track     Track    @relation(fields: [trackId], references: [id])
-  verdict   String // GOOD, BAD
+  verdict   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -70,7 +69,7 @@ model Friendship {
   receiverId  Int
   requester   User     @relation("SentRequests", fields: [requesterId], references: [id])
   receiver    User     @relation("ReceivedRequests", fields: [receiverId], references: [id])
-  status      String   @default("PENDING") // PENDING, ACCEPTED, DECLINED
+  status      String   @default("PENDING")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

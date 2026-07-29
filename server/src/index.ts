@@ -16,8 +16,6 @@ import { ensureAdminAccount } from "./seed.js";
 const app = express();
 const PORT = Number(process.env.PORT ?? 3000);
 
-// Azure terminates HTTPS in front of us. Without this, Express sees plain HTTP
-// and refuses to set the secure session cookie, so nobody can log in.
 if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 1);
 }
@@ -29,7 +27,6 @@ const clientIndex = path.join(clientDist, "index.html");
 app.use(express.json());
 app.use(cookieParser());
 
-// Plain HTML page used to poke the API by hand.
 app.use("/debug", express.static(path.join(__dirname, "../public")));
 
 app.get("/api/health", (req, res) => {
@@ -62,13 +59,19 @@ app.use((req, res, next) => {
 });
 
 app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
-  console.error(error);
-
   if (res.headersSent) {
     next(error);
     return;
   }
 
+  const status = (error as { status?: number }).status;
+
+  if (error instanceof SyntaxError && status === 400) {
+    res.status(400).json({ error: "Malformed JSON body" });
+    return;
+  }
+
+  console.error(error);
   res.status(500).json({ error: "Internal server error" });
 });
 

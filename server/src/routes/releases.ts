@@ -32,10 +32,8 @@ router.post("/", requireAuth, async (req, res) => {
     return;
   }
 
-  // trackCount is context for the search list, not a column on Release
   const { trackCount, ...columns } = details;
 
-  // the lookup decides the real kind, so key off the id it gives back
   const release = await prisma.release.upsert({
     where: { externalId: columns.externalId },
     create: columns,
@@ -92,11 +90,13 @@ router.put("/:id/rating", requireAuth, async (req, res) => {
     return;
   }
 
-  const score = Number(req.body.score);
-  if (!Number.isInteger(score) || score < 1 || score > 10) {
-    res.status(400).json({ error: "Invalid score" });
+  const raw = Number(req.body.score);
+  if (!Number.isFinite(raw) || raw < 1 || raw > 10) {
+    res.status(400).json({ error: "Score must be between 1 and 10" });
     return;
   }
+
+  const score = Math.round(raw * 100) / 100;
 
   const release = await prisma.release.findUnique({ where: { id } });
   if (!release) {
@@ -126,15 +126,11 @@ router.delete("/:id/rating", requireAuth, async (req, res) => {
     return;
   }
 
-  // deleteMany instead of delete: no error when there is nothing to remove
   await prisma.rating.deleteMany({ where: { releaseId: id, userId: me.id } });
 
   res.status(204).end();
 });
 
-// GET /api/releases/:id/tracks
-// Tracks are imported the first time somebody opens the album, the same way
-// releases are: we only store what people actually look at.
 router.get("/:id/tracks", optionalAuth, async (req, res) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
@@ -187,7 +183,6 @@ router.get("/:id/tracks", optionalAuth, async (req, res) => {
   );
 });
 
-// PUT /api/releases/:id/tracks/:trackId/verdict
 router.put("/:id/tracks/:trackId/verdict", requireAuth, async (req, res) => {
   const me = req.user;
   if (!me) {

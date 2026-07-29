@@ -19,8 +19,6 @@ export type MusicTrack = {
   discNumber: number;
 };
 
-// Albums and tracks are numbered separately, and the prefix also records which
-// service the id came from, so older iTunes rows can never be confused for these.
 function albumId(id: number): string {
   return `dz-album:${id}`;
 }
@@ -81,7 +79,6 @@ function albumToRelease(album: DeezerAlbum): MusicRelease {
     title: album.title ?? "",
     artist: album.artist?.name ?? "",
     releaseYear: parseYear(album.release_date),
-    // Deezer calls EPs and singles by name; anything else is an album.
     kind: album.record_type === "single" ? "SINGLE" : "ALBUM",
     coverUrl: album.cover_xl ?? album.cover_big ?? "",
     trackCount: album.nb_tracks,
@@ -108,8 +105,6 @@ function normalise(value: string): string {
     .trim();
 }
 
-// Ranks by how directly a result answers the query, so an exact album title
-// beats a remix, a tribute or a compilation that merely mentions it.
 function relevance(release: MusicRelease, query: string): number {
   const title = normalise(release.title);
   const artist = normalise(release.artist);
@@ -125,7 +120,6 @@ function relevance(release: MusicRelease, query: string): number {
   else if (term.includes(artist) && artist.length > 2) score += 35;
   else if (artist.includes(term)) score += 20;
 
-  // "artist album" typed together should still rank both halves.
   const words = term.split(" ").filter((w) => w.length > 2);
   for (const word of words) {
     if (title.includes(word)) score += 10;
@@ -185,7 +179,6 @@ export async function getMusicRelease(
   return null;
 }
 
-// Every song on an album, in running order.
 export async function getAlbumTracks(
   externalId: string,
 ): Promise<MusicTrack[]> {
@@ -200,7 +193,6 @@ export async function getAlbumTracks(
 
     const tracks = album.tracks?.data ?? [];
 
-    // The list already comes in running order; position is not always filled in.
     return tracks.map((track, index) => ({
       externalId: trackId(track.id),
       title: track.title ?? "",

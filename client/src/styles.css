@@ -50,8 +50,6 @@ textarea {
   outline-offset: 2px;
 }
 
-/* ---------- shell ---------- */
-
 .shell {
   min-height: 100vh;
   display: flex;
@@ -121,8 +119,6 @@ textarea {
   padding: 2.5rem 1.25rem 6rem;
 }
 
-/* ---------- headings ---------- */
-
 .eyebrow {
   font-family: var(--mono);
   font-size: 0.75rem;
@@ -179,8 +175,6 @@ textarea {
   font-weight: 500;
 }
 
-/* ---------- the record: one row per rating ---------- */
-
 .record {
   border-top: 1px solid var(--line);
 }
@@ -206,7 +200,6 @@ textarea {
   background: var(--card);
 }
 
-/* Hue and weight carry the score: a 10 burns amber, a 2 barely registers. */
 .score {
   font-stretch: 125%;
   font-size: 2rem;
@@ -220,6 +213,11 @@ textarea {
     var(--muted)
   );
   opacity: calc(0.62 + var(--weight) * 0.38);
+}
+
+.score.fractional {
+  font-size: 1.25rem;
+  letter-spacing: -0.03em;
 }
 
 .cover {
@@ -267,8 +265,6 @@ textarea {
   padding: 0.15rem 0.45rem;
 }
 
-/* ---------- release page ---------- */
-
 .release {
   display: grid;
   grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
@@ -300,11 +296,93 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
+.scorer {
+  max-width: 26rem;
+}
+
+.scorer-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.scorer-value {
+  font-weight: 900;
+  font-stretch: 125%;
+  font-size: 3rem;
+  line-height: 0.85;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.scorer-value.empty {
+  color: var(--muted);
+}
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2.25rem;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  border: 0;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+
+.slider::-moz-range-track {
+  height: 0.5rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0.75rem;
+  height: 1.75rem;
+  margin-top: -0.68rem;
+  background: var(--accent);
+  border: 0;
+  border-radius: 0;
+}
+
+.slider::-moz-range-thumb {
+  width: 0.75rem;
+  height: 1.75rem;
+  background: var(--accent);
+  border: 0;
+  border-radius: 0;
+}
+
+.slider:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.slider-scale {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+  margin-top: -0.35rem;
+}
+
 .dial {
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
   gap: 2px;
   max-width: 26rem;
+  margin-bottom: 0.75rem;
 }
 
 .dial button {
@@ -336,8 +414,6 @@ textarea {
 .dial button:disabled {
   cursor: default;
 }
-
-/* ---------- tracklist ---------- */
 
 .tracklist {
   border-top: 1px solid var(--line);
@@ -419,8 +495,6 @@ textarea {
 .verdicts button:disabled {
   cursor: default;
 }
-
-/* ---------- admin ---------- */
 
 .stats {
   display: grid;
@@ -504,8 +578,6 @@ td.grow {
   border-color: var(--accent);
   color: var(--accent);
 }
-
-/* ---------- forms & buttons ---------- */
 
 .field {
   display: block;
@@ -606,8 +678,6 @@ textarea:focus {
   max-width: 34rem;
 }
 
-/* ---------- entry gate ---------- */
-
 .gate {
   min-height: 100vh;
   display: grid;
@@ -645,8 +715,6 @@ textarea:focus {
   border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
-/* ---------- states ---------- */
-
 .notice {
   font-family: var(--mono);
   font-size: 0.8125rem;
@@ -681,8 +749,6 @@ textarea:focus {
   margin: 0 auto;
 }
 
-/* ---------- people ---------- */
-
 .people {
   display: grid;
   gap: 1px;
@@ -713,8 +779,6 @@ textarea:focus {
   margin-left: auto;
 }
 
-/* ---------- motion ---------- */
-
 .entry,
 .person {
   animation: rise 0.32s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
@@ -736,8 +800,6 @@ textarea:focus {
     transition-duration: 0.01ms !important;
   }
 }
-
-/* ---------- small screens ---------- */
 
 @media (max-width: 40rem) {
   .masthead-inner {

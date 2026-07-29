@@ -123,7 +123,6 @@ export default function App() {
             </Guarded>
           }
         />
-        {/* The server checks the role too: hiding the link is not protection. */}
         <Route
           path="/admin"
           element={
