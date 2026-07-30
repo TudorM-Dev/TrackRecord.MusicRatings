@@ -1,6 +1,7 @@
 import { Navigate, NavLink, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useAuth } from "./auth";
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import SearchPage from "./pages/SearchPage";
@@ -8,6 +9,8 @@ import ReleasePage from "./pages/ReleasePage";
 import ProfilePage from "./pages/ProfilePage";
 import FriendsPage from "./pages/FriendsPage";
 import AdminPage from "./pages/AdminPage";
+
+const DEMO_USERNAME = "demo";
 
 function Masthead() {
   const { user, logout } = useAuth();
@@ -44,11 +47,33 @@ function Masthead() {
   );
 }
 
+function DemoBar() {
+  const { user, logout } = useAuth();
+
+  if (user?.username !== DEMO_USERNAME) return null;
+
+  return (
+    <div className="demobar">
+      <span>You are browsing a sample record. Nothing here is saved for long.</span>
+      <button onClick={() => void logout()}>leave the sample</button>
+    </div>
+  );
+}
+
+function Home() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <p className="loading">Loading…</p>;
+  if (!user) return <LandingPage />;
+
+  return <ProfilePage />;
+}
+
 function Guarded({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) return <p className="loading">Loading…</p>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
 
   return <>{children}</>;
 }
@@ -65,6 +90,7 @@ function Public({ children }: { children: ReactNode }) {
 export default function App() {
   return (
     <div className="shell">
+      <DemoBar />
       <Masthead />
       <Routes>
         <Route
@@ -83,14 +109,7 @@ export default function App() {
             </Public>
           }
         />
-        <Route
-          path="/"
-          element={
-            <Guarded>
-              <ProfilePage />
-            </Guarded>
-          }
-        />
+        <Route path="/" element={<Home />} />
         <Route
           path="/search"
           element={

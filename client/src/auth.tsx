@@ -17,6 +17,7 @@ type AuthState = {
     username: string,
     password: string,
   ) => Promise<void>;
+  demo: () => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: CurrentUser) => void;
 };
@@ -52,6 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await login(email, password);
   }
 
+  async function demo() {
+    const loggedIn = await api.post<CurrentUser>("/api/auth/demo");
+    setUser(loggedIn);
+  }
+
   async function logout() {
     await api.post("/api/auth/logout");
     setUser(null);
@@ -59,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, logout, setUser }}
+      value={{ user, loading, login, register, demo, logout, setUser }}
     >
       {children}
     </AuthContext.Provider>

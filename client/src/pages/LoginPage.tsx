@@ -25,9 +25,9 @@ export default function LoginPage() {
   return (
     <div className="gate">
       <div className="gate-inner">
-        <span className="wordmark">
+        <Link className="wordmark" to="/">
           Track<span>Record</span>
-        </span>
+        </Link>
         <p className="gate-tagline">Every album you rated, on one page.</p>
 
         <form onSubmit={submit}>

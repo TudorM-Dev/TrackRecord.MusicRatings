@@ -28,9 +28,9 @@ export default function RegisterPage() {
   return (
     <div className="gate">
       <div className="gate-inner">
-        <span className="wordmark">
+        <Link className="wordmark" to="/">
           Track<span>Record</span>
-        </span>
+        </Link>
         <p className="gate-tagline">Start keeping score.</p>
 
         <form onSubmit={submit}>
