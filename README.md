@@ -12,7 +12,7 @@ ones you would cut. Only the people whose friend request you accepted can open y
 ![React](https://img.shields.io/badge/React-19%20%2B%20Vite-61DAFB)
 ![Host](https://img.shields.io/badge/hosted%20on-Azure-0078D4)
 
-### ▶ [Try the live demo](https://trackrecord.azurewebsites.net)
+### ▶ [Try the live demo](https://trackrecord-dgggbvhmdyfcexdw.germanywestcentral-01.azurewebsites.net/)
 
 Click **See a sample record**. It signs you in as a demo profile that already has rated albums and one
 accepted friend, so you can watch the privacy rule work from both sides without filling in a single
@@ -70,8 +70,8 @@ if (!canSeeFullProfile) {
 }
 ```
 
-The frontend reads the same `relationship` value to decide whether to offer *add friend*, *cancel
-request*, *accept* or nothing at all, so the data and the buttons cannot drift apart.
+The frontend reads the same `relationship` value to decide whether to offer _add friend_, _cancel
+request_, _accept_ or nothing at all, so the data and the buttons cannot drift apart.
 
 ### One row per friendship
 
@@ -209,14 +209,14 @@ sample record**, and you land inside with data already there.
 
 ## Configuration
 
-| Variable | Where | Notes |
-| --- | --- | --- |
-| `DATABASE_URL` | `.env`, App Service | SQLite path. On Azure it points at the persistent `/home` volume. |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | `.env`, App Service | Creates the admin on boot, or promotes the account if it already exists. Skipped when unset. |
-| `ADMIN_USERNAME` | optional | Defaults to `admin`. |
-| `BCRYPT_COST` | optional | Defaults to 10. |
-| `NODE_ENV` | App Service | `production` turns on `Secure` cookies and static file serving, and trusts the proxy for HTTPS detection. |
-| `PORT` | App Service | Supplied by the host. Defaults to 3000. |
+| Variable                        | Where               | Notes                                                                                                     |
+| ------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                  | `.env`, App Service | SQLite path. On Azure it points at the persistent `/home` volume.                                         |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | `.env`, App Service | Creates the admin on boot, or promotes the account if it already exists. Skipped when unset.              |
+| `ADMIN_USERNAME`                | optional            | Defaults to `admin`.                                                                                      |
+| `BCRYPT_COST`                   | optional            | Defaults to 10.                                                                                           |
+| `NODE_ENV`                      | App Service         | `production` turns on `Secure` cookies and static file serving, and trusts the proxy for HTTPS detection. |
+| `PORT`                          | App Service         | Supplied by the host. Defaults to 3000.                                                                   |
 
 ---
 
