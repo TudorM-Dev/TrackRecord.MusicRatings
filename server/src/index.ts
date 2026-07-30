@@ -12,6 +12,7 @@ import usersRouter from "./routes/users.js";
 import musicRouter from "./routes/music.js";
 import adminRouter from "./routes/admin.js";
 import { ensureAdminAccount } from "./seed.js";
+import { resetDemoData } from "./demo.js";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 3000);
@@ -76,6 +77,8 @@ app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
 });
 
 await ensureAdminAccount();
+
+void resetDemoData().catch((error) => console.error("Demo seed failed", error));
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

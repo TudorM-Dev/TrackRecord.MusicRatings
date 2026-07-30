@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../prisma.js";
 import { randomBytes } from "node:crypto";
 import { requireAuth } from "../middleware/auth.js";
+import { resetDemoData } from "../demo.js";
 
 const router = Router();
 
@@ -95,6 +96,32 @@ router.post("/login", async (req, res) => {
     username: user.username,
     displayName: user.displayName,
     role: user.role,
+  });
+});
+
+router.post("/demo", async (req, res) => {
+  const demo = await resetDemoData();
+
+  const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
+
+  await prisma.session.create({
+    data: { id: token, userId: demo.id, expiresAt },
+  });
+
+  res.cookie("session", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 1000 * 60 * 60 * 24,
+  });
+
+  res.json({
+    id: demo.id,
+    email: demo.email,
+    username: demo.username,
+    displayName: demo.displayName,
+    role: demo.role,
   });
 });
 
