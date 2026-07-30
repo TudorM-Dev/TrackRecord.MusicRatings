@@ -5,12 +5,16 @@ import { getMusicRelease, searchMusic } from "./music.js";
 import { ACCEPTED } from "./types.js";
 
 export const DEMO_EMAIL = "demo@trackrecord.local";
-const FRIEND_EMAIL = "ana@trackrecord.local";
+const FRIEND_EMAIL = "TudorMutica@trackrecord.local";
 
 type Seed = { query: string; mine: number; theirs: number };
 
 const SEEDS: Seed[] = [
-  { query: "My Beautiful Dark Twisted Fantasy Kanye West", mine: 9.5, theirs: 8 },
+  {
+    query: "My Beautiful Dark Twisted Fantasy Kanye West",
+    mine: 9.5,
+    theirs: 8,
+  },
   { query: "Blonde Frank Ocean", mine: 10, theirs: 9.25 },
   { query: "In Rainbows Radiohead", mine: 9, theirs: 9.5 },
   { query: "To Pimp A Butterfly Kendrick Lamar", mine: 9.75, theirs: 10 },
@@ -71,9 +75,9 @@ export async function resetDemoData() {
   );
   const friend = await ensureUser(
     FRIEND_EMAIL,
-    "ana",
-    "Ana Popescu",
-    "Shoegaze, rap, and anything with a bad drum machine.",
+    "tudor",
+    "Tudor Mutica",
+    "Trap, rap, and anything with a bad drum machine.",
   );
 
   const ids = [demo.id, friend.id];
@@ -81,7 +85,9 @@ export async function resetDemoData() {
   await prisma.trackVerdict.deleteMany({ where: { userId: { in: ids } } });
   await prisma.rating.deleteMany({ where: { userId: { in: ids } } });
 
-  const releases = await Promise.all(SEEDS.map((seed) => ensureRelease(seed.query)));
+  const releases = await Promise.all(
+    SEEDS.map((seed) => ensureRelease(seed.query)),
+  );
 
   for (const [index, release] of releases.entries()) {
     if (!release) continue;
