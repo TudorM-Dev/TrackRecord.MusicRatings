@@ -1,5 +1,12 @@
-import { Navigate, NavLink, Route, Routes } from "react-router-dom";
-import type { ReactNode } from "react";
+import {
+  Navigate,
+  NavLink,
+  Route,
+  Routes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
+import { useEffect, type ReactNode } from "react";
 import { useAuth } from "./auth";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
@@ -11,6 +18,18 @@ import FriendsPage from "./pages/FriendsPage";
 import AdminPage from "./pages/AdminPage";
 
 const DEMO_USERNAME = "demo";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  const navigationType = useNavigationType();
+
+  useEffect(() => {
+    if (navigationType === "POP") return;
+    window.scrollTo(0, 0);
+  }, [pathname, navigationType]);
+
+  return null;
+}
 
 function Masthead() {
   const { user, logout } = useAuth();
@@ -54,8 +73,13 @@ function DemoBar() {
 
   return (
     <div className="demobar">
-      <span>You are browsing a sample record. Nothing here is saved for long.</span>
-      <button onClick={() => void logout()}>leave the sample</button>
+      <div className="demobar-inner">
+        <span className="demobar-dot" aria-hidden="true" />
+        <p>
+          Sample record.<span> Nothing you change here is kept.</span>
+        </p>
+        <button onClick={() => void logout()}>Leave the sample</button>
+      </div>
     </div>
   );
 }
@@ -90,6 +114,7 @@ function Public({ children }: { children: ReactNode }) {
 export default function App() {
   return (
     <div className="shell">
+      <ScrollToTop />
       <DemoBar />
       <Masthead />
       <Routes>

@@ -1,11 +1,49 @@
 import { useCallback, useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api";
 import { formatScore } from "../format";
+import { useDocumentTint, useTint } from "../tint";
 import type { ReleaseDetail, Track, Verdict } from "../types";
 
-const SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const MIN = 1;
+const MAX = 10;
+const STEP = 0.25;
 const DEFAULT_SCORE = 7;
+
+function Keep() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="square"
+      aria-hidden="true"
+    >
+      <path d="M3 8.5l3.5 3.5L13 4.5" />
+    </svg>
+  );
+}
+
+function Cut() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="square"
+      aria-hidden="true"
+    >
+      <path d="M4 4l8 8M12 4l-8 8" />
+    </svg>
+  );
+}
 
 export default function ReleasePage() {
   const { id } = useParams();
@@ -14,6 +52,10 @@ export default function ReleasePage() {
   const [draft, setDraft] = useState<number | null>(null);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const tint = useTint(release?.coverUrl);
+  useDocumentTint(release ? tint : undefined);
 
   const load = useCallback(async () => {
     try {
@@ -24,8 +66,11 @@ export default function ReleasePage() {
       setRelease(detail);
       setTracks(trackList);
       setDraft(null);
+      setNotice("");
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Could not load release");
+    } finally {
+      setLoading(false);
     }
   }, [id]);
 
@@ -47,7 +92,10 @@ export default function ReleasePage() {
   }
 
   function saveScore(score: number) {
-    return change(() => api.put(`/api/releases/${id}/rating`, { score }));
+    const clamped = Math.min(MAX, Math.max(MIN, Math.round(score / STEP) * STEP));
+    return change(() =>
+      api.put(`/api/releases/${id}/rating`, { score: clamped }),
+    );
   }
 
   function setVerdict(track: Track, verdict: Verdict) {
@@ -57,113 +105,167 @@ export default function ReleasePage() {
     );
   }
 
-  if (!release) {
-    return <p className="loading">{notice || "Loading…"}</p>;
+  if (loading) {
+    return (
+      <>
+        <section className="hero">
+          <div className="hero-in">
+            <div className="skeleton hero-art" />
+            <div>
+              <div
+                className="skeleton"
+                style={{ width: "60%", height: "3rem", borderRadius: 2 }}
+              />
+              <div
+                className="skeleton"
+                style={{
+                  width: "30%",
+                  height: "1rem",
+                  marginTop: "1.25rem",
+                  borderRadius: 2,
+                }}
+              />
+            </div>
+          </div>
+        </section>
+        <p className="loading">Loading…</p>
+      </>
+    );
   }
 
-  const current = draft ?? release.myScore ?? DEFAULT_SCORE;
+  if (!release) {
+    return (
+      <main className="page">
+        <h1 className="headline">Nothing here</h1>
+        <p className="notice">{notice || "That release could not be found."}</p>
+        <div className="actions" style={{ marginTop: "1.5rem" }}>
+          <button className="btn" onClick={() => void load()}>
+            Try again
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   const rated = release.myScore !== null;
-  const good = tracks.filter((t) => t.myVerdict === "GOOD").length;
-  const bad = tracks.filter((t) => t.myVerdict === "BAD").length;
+  const current = draft ?? release.myScore ?? DEFAULT_SCORE;
+  const fill = ((current - MIN) / (MAX - MIN)) * 100;
+  const cut = tracks.filter((t) => t.myVerdict === "BAD").length;
+  const kept = tracks.filter((t) => t.myVerdict === "GOOD").length;
 
   return (
-    <main className="page">
-      <div className="release">
-        <img
-          className="release-cover"
-          src={release.coverUrl || undefined}
-          alt=""
-        />
+    <>
+      <section className="hero">
+        {release.coverUrl && (
+          <div
+            className="hero-bg"
+            style={{ backgroundImage: `url(${release.coverUrl})` }}
+          />
+        )}
+        <div className="hero-veil" />
+        <div className="hero-in">
+          <img
+            className="hero-art"
+            src={release.coverUrl || undefined}
+            alt={`${release.title} by ${release.artist}`}
+          />
+          <div>
+            <p className="hero-cat">
+              {release.kind === "ALBUM" ? "Album" : "Single"}
+              {release.releaseYear ? ` · ${release.releaseYear}` : ""}
+              {tracks.length > 0 && ` · ${tracks.length} tracks`}
+            </p>
+            <h1>{release.title}</h1>
+            <p className="hero-artist">{release.artist}</p>
 
-        <div>
-          <p className="eyebrow">
-            {release.kind === "ALBUM" ? "album" : "single"} ·{" "}
-            {release.releaseYear || "—"}
-          </p>
-          <h1 className="headline">{release.title}</h1>
-          <p className="meta">{release.artist}</p>
+            <div className="hero-nums">
+              <div className={rated ? "mine" : "mine empty"}>
+                <b>{rated ? formatScore(release.myScore as number) : "—"}</b>
+                your score
+              </div>
+              <div className={release.averageScore === null ? "empty" : ""}>
+                <b>
+                  {release.averageScore === null
+                    ? "—"
+                    : release.averageScore.toFixed(2)}
+                </b>
+                {release.ratingCount === 1
+                  ? "from 1 rating"
+                  : `average of ${release.ratingCount}`}
+              </div>
+              {tracks.length > 0 && (
+                <div className={cut === 0 ? "empty" : ""}>
+                  <b>{cut}</b>
+                  {cut === 1 ? "track you'd cut" : "tracks you'd cut"}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <div className="average">
-            {release.averageScore === null ? (
-              <span className="meta" style={{ margin: 0 }}>
-                No ratings yet — yours would be the first.
-              </span>
-            ) : (
-              <>
-                <span className="average-value">
-                  {release.averageScore.toFixed(2)}
-                </span>
-                <span className="meta" style={{ margin: 0 }}>
-                  from {release.ratingCount}{" "}
-                  {release.ratingCount === 1 ? "rating" : "ratings"}
-                </span>
-              </>
-            )}
+      <main className="page">
+        <div className="section">
+          <h2>{rated ? "your score" : "rate it"}</h2>
+        </div>
+
+        <div className="scoreband">
+          <div className="scoreband-top">
+            <span
+              className={
+                rated || draft !== null
+                  ? "scoreband-value"
+                  : "scoreband-value empty"
+              }
+            >
+              {formatScore(current)}
+              <em>of 10</em>
+            </span>
+            <span className="scoreband-hint">
+              {rated ? "drag, or nudge by 0.25" : "drag to set a score"}
+            </span>
           </div>
 
-          <div className="section-rule" style={{ marginTop: "2.5rem" }}>
-            <h2>{rated ? "your score" : "rate the album"}</h2>
-          </div>
-
-          <div className="scorer">
-            <div className="scorer-readout">
-              <span
-                className={
-                  rated || draft !== null
-                    ? "scorer-value"
-                    : "scorer-value empty"
-                }
-              >
-                {formatScore(current)}
-              </span>
-              <span className="meta" style={{ margin: 0 }}>
-                {draft !== null && draft !== release.myScore
-                  ? "release to save"
-                  : rated
-                    ? "out of 10"
-                    : "drag or pick a number"}
-              </span>
-            </div>
-
-            <div className="dial">
-              {SCORES.map((score) => (
-                <button
-                  key={score}
-                  aria-pressed={release.myScore === score}
-                  aria-label={`Rate ${score} out of 10`}
-                  disabled={busy}
-                  onClick={() => void saveScore(score)}
-                >
-                  {score}
-                </button>
-              ))}
-            </div>
-
+          <div className="band" style={{ "--fill": `${fill}%` } as CSSProperties}>
             <input
-              className="slider"
               type="range"
-              min={1}
-              max={10}
-              step={0.05}
+              min={MIN}
+              max={MAX}
+              step={STEP}
               value={current}
               disabled={busy}
-              aria-label="Score out of 10"
+              aria-label="Your score out of 10"
               onChange={(e) => setDraft(Number(e.target.value))}
               onPointerUp={() => draft !== null && void saveScore(draft)}
               onKeyUp={() => draft !== null && void saveScore(draft)}
             />
-
-            <div className="slider-scale">
-              <span>1</span>
-              <span>5</span>
-              <span>10</span>
-            </div>
           </div>
 
-          {rated && (
-            <div className="actions" style={{ marginTop: "1rem" }}>
+          <div className="band-scale">
+            <span>1</span>
+            <span>5</span>
+            <span>10</span>
+          </div>
+
+          <div className="nudge">
+            <button
+              type="button"
+              disabled={busy || current <= MIN}
+              onClick={() => void saveScore(current - STEP)}
+            >
+              &minus;0.25
+            </button>
+            <button
+              type="button"
+              disabled={busy || current >= MAX}
+              onClick={() => void saveScore(current + STEP)}
+            >
+              +0.25
+            </button>
+            {rated && (
               <button
-                className="btn warn small"
+                type="button"
+                className="drop"
                 disabled={busy}
                 onClick={() =>
                   void change(() => api.del(`/api/releases/${id}/rating`))
@@ -171,70 +273,61 @@ export default function ReleasePage() {
               >
                 Remove my score
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           {notice && <p className="notice">{notice}</p>}
         </div>
-      </div>
 
-      {tracks.length > 0 && (
-        <>
-          <div className="section-rule">
-            <h2>
-              track by track
-              {(good > 0 || bad > 0) && (
-                <>
-                  {" "}
-                  · {good} kept · {bad} skipped
-                </>
-              )}
-            </h2>
-          </div>
+        {tracks.length > 0 && (
+          <>
+            <div className="section">
+              <h2>
+                track by track
+                {kept + cut > 0 && ` · ${kept} kept · ${cut} cut`}
+              </h2>
+            </div>
 
-          <p className="meta" style={{ marginTop: 0, marginBottom: "1rem" }}>
-            Mark what earns its place on the album and what you would cut.
-          </p>
-
-          <div className="tracklist">
-            {tracks.map((track) => (
-              <div
-                key={track.id}
-                className={
-                  "track" +
-                  (track.myVerdict === "GOOD" ? " is-good" : "") +
-                  (track.myVerdict === "BAD" ? " is-bad" : "")
-                }
-              >
-                <span className="track-number">{track.trackNumber}</span>
-                <span className="track-title">{track.title}</span>
-                <span className="verdicts">
-                  <button
-                    className="good"
-                    aria-pressed={track.myVerdict === "GOOD"}
-                    aria-label={`Keep ${track.title}`}
-                    title="Belongs here"
-                    disabled={busy}
-                    onClick={() => void setVerdict(track, "GOOD")}
-                  >
-                    ✓
-                  </button>
-                  <button
-                    className="bad"
-                    aria-pressed={track.myVerdict === "BAD"}
-                    aria-label={`Cut ${track.title}`}
-                    title="Would cut it"
-                    disabled={busy}
-                    onClick={() => void setVerdict(track, "BAD")}
-                  >
-                    ✕
-                  </button>
-                </span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </main>
+            <div className="tracklist">
+              {tracks.map((track) => (
+                <div
+                  key={track.id}
+                  className={
+                    "track" +
+                    (track.myVerdict === "GOOD" ? " is-good" : "") +
+                    (track.myVerdict === "BAD" ? " is-bad" : "")
+                  }
+                >
+                  <span className="track-number">{track.trackNumber}</span>
+                  <span className="track-title">{track.title}</span>
+                  <span className="verdicts">
+                    <button
+                      className="good"
+                      aria-pressed={track.myVerdict === "GOOD"}
+                      aria-label={`Keep ${track.title}`}
+                      title="Earns its place"
+                      disabled={busy}
+                      onClick={() => void setVerdict(track, "GOOD")}
+                    >
+                      <Keep />
+                    </button>
+                    <button
+                      className="bad"
+                      aria-pressed={track.myVerdict === "BAD"}
+                      aria-label={`Cut ${track.title}`}
+                      title="Would cut it"
+                      disabled={busy}
+                      onClick={() => void setVerdict(track, "BAD")}
+                    >
+                      <Cut />
+                    </button>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </main>
+    </>
   );
 }

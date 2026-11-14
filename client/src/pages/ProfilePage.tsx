@@ -2,28 +2,60 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
-import Entry from "../components/Entry";
+import Sleeve from "../components/Sleeve";
 import type { CurrentUser, Profile } from "../types";
 
 const MONTHS = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 function since(iso: string | undefined) {
   if (!iso) return null;
   const date = new Date(iso);
   return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+function Skeleton() {
+  return (
+    <main className="page">
+      <div className="profile-head">
+        <div>
+          <div
+            className="skeleton"
+            style={{ width: "14rem", height: "3rem", borderRadius: 2 }}
+          />
+          <div
+            className="skeleton"
+            style={{
+              width: "10rem",
+              height: "0.875rem",
+              marginTop: "1rem",
+              borderRadius: 2,
+            }}
+          />
+        </div>
+      </div>
+      <div className="section">
+        <h2>the record</h2>
+      </div>
+      <div className="sleeves">
+        {Array.from({ length: 8 }, (_, i) => (
+          <div key={i} className="skeleton" style={{ aspectRatio: 1 }} />
+        ))}
+      </div>
+    </main>
+  );
 }
 
 export default function ProfilePage() {
@@ -86,47 +118,68 @@ export default function ProfilePage() {
   }
 
   if (!profile) {
-    return <p className="loading">{notice || "Loading…"}</p>;
+    if (notice) {
+      return (
+        <main className="page">
+          <h1 className="headline">That did not load</h1>
+          <p className="notice">{notice}</p>
+          <div className="actions" style={{ marginTop: "1.5rem" }}>
+            <button className="btn" onClick={() => void load()}>
+              Try again
+            </button>
+          </div>
+        </main>
+      );
+    }
+    return <Skeleton />;
   }
 
   const isSelf = profile.relationship === "self";
   const ratings = profile.ratings ?? [];
+  const open = Boolean(profile.ratings);
   const average =
     ratings.length > 0
       ? ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length
       : null;
 
+  const standing =
+    profile.relationship === "friends"
+      ? "friends"
+      : profile.relationship === "pending_sent"
+        ? "request sent"
+        : profile.relationship === "pending_received"
+          ? "wants to be friends"
+          : null;
+
   return (
     <main className="page">
-      <p className="eyebrow">
-        {isSelf ? "your record" : `@${profile.username}`}
-      </p>
-      <h1 className="headline">{profile.displayName}</h1>
+      <div className="profile-head">
+        <div>
+          <h1 className="headline">{profile.displayName}</h1>
+          <p className="meta">
+            @{profile.username}
+            {standing && <> · {standing}</>}
+            {profile.createdAt && <> · keeping score since {since(profile.createdAt)}</>}
+          </p>
+        </div>
 
-      <p className="meta">
-        {isSelf && <>@{profile.username} · </>}
-        {profile.relationship === "friends" && <>friends · </>}
-        {profile.relationship === "pending_sent" && <>request sent · </>}
-        {profile.relationship === "pending_received" && (
-          <>wants to be friends · </>
-        )}
-        {profile.ratings ? (
-          <>
-            <b>{ratings.length}</b> rated
+        {open && ratings.length > 0 && (
+          <div className="tally">
+            <div>
+              <b>{ratings.length}</b>
+              rated
+            </div>
             {average !== null && (
-              <>
-                {" · avg "}
-                <b>{average.toFixed(2)}</b>
-              </>
+              <div>
+                <b className="accent">{average.toFixed(2)}</b>
+                average
+              </div>
             )}
-          </>
-        ) : (
-          <>private record</>
+          </div>
         )}
-        {profile.createdAt && <> · since {since(profile.createdAt)}</>}
-      </p>
+      </div>
 
-      {profile.bio && <p style={{ maxWidth: "38rem" }}>{profile.bio}</p>}
+      {profile.bio && !editing && <p className="bio">{profile.bio}</p>}
 
       {notice && <p className="notice">{notice}</p>}
 
@@ -147,7 +200,7 @@ export default function ProfilePage() {
               )
             }
           >
-            Add friend
+            {busy ? "Sending…" : "Add friend"}
           </button>
         )}
 
@@ -174,7 +227,7 @@ export default function ProfilePage() {
       </div>
 
       {editing && (
-        <div style={{ maxWidth: "26rem", marginTop: "1.5rem" }}>
+        <div style={{ maxWidth: "26rem", marginTop: "1.75rem" }}>
           <label className="field">
             <span>Display name</span>
             <input
@@ -193,7 +246,7 @@ export default function ProfilePage() {
           </label>
           <div className="actions">
             <button className="btn" disabled={busy} onClick={() => void save()}>
-              Save changes
+              {busy ? "Saving…" : "Save changes"}
             </button>
             <button className="btn quiet" onClick={() => setEditing(false)}>
               Cancel
@@ -202,52 +255,63 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {profile.ratings ? (
-        <>
-          <div className="section-rule">
-            <h2>{isSelf ? "the record" : "rated"}</h2>
-          </div>
+      <div className="section">
+        <h2>the record</h2>
+      </div>
 
-          {ratings.length === 0 ? (
-            <div className="blank">
-              <p>
-                {isSelf
-                  ? "Nothing on the record yet."
-                  : "Nothing rated yet."}
-              </p>
-              {isSelf && (
-                <Link className="btn" to="/search">
-                  Find something to rate
-                </Link>
-              )}
-            </div>
-          ) : (
-            <div className="record">
-              {ratings.map((rating, index) => (
-                <Entry
-                  key={rating.id}
-                  index={index}
-                  score={rating.score}
-                  coverUrl={rating.release.coverUrl}
-                  title={rating.release.title}
-                  subtitle={`${rating.release.artist} · ${rating.release.releaseYear}`}
-                  tag={rating.release.kind}
-                  to={`/releases/${rating.release.id}`}
-                />
-              ))}
-            </div>
+      {!open ? (
+        <div className="blank">
+          <p>This record is private.</p>
+          <p>
+            Only {profile.displayName}&rsquo;s friends can see what they rated.
+          </p>
+          {profile.relationship === "none" && (
+            <button
+              className="btn"
+              disabled={busy}
+              onClick={() =>
+                void act(() =>
+                  api.post("/api/friends/requests", {
+                    target: profile.username,
+                  }),
+                )
+              }
+            >
+              Send a friend request
+            </button>
           )}
-        </>
+        </div>
+      ) : ratings.length === 0 ? (
+        <div className="blank">
+          <p>
+            {isSelf
+              ? "Nothing on the record yet."
+              : `${profile.displayName} has not rated anything yet.`}
+          </p>
+          {isSelf && (
+            <>
+              <p>Search for an album and give it a number.</p>
+              <Link className="btn" to="/search">
+                Find something to rate
+              </Link>
+            </>
+          )}
+        </div>
       ) : (
-        <>
-          <div className="section-rule">
-            <h2>the record</h2>
-          </div>
-          <div className="blank">
-            <p>This record is private.</p>
-            <p>Become friends to see what {profile.displayName} has rated.</p>
-          </div>
-        </>
+        <div className="sleeves">
+          {ratings.map((rating, index) => (
+            <Sleeve
+              key={rating.id}
+              index={index}
+              to={`/releases/${rating.release.id}`}
+              coverUrl={rating.release.coverUrl}
+              title={rating.release.title}
+              artist={rating.release.artist}
+              year={rating.release.releaseYear}
+              score={rating.score}
+            />
+          ))}
+        </div>
       )}
     </main>
   );
