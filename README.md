@@ -25,15 +25,15 @@ left behind.
 
 **Everything you rated, newest first**
 
-![Profile](docs/profile.png)
+![Profile](docs/profile.jpg)
 
-**An album: the score dial, and a verdict on every track**
+**An album, wearing the colour of its own sleeve**
 
-![Release](docs/release.png)
+![Release](docs/release.jpg)
 
-**Friend requests in both directions, and a stranger's locked profile**
+**The only people who can open your record**
 
-![Friends](docs/friends.png)
+![Friends](docs/friends.jpg)
 
 ---
 
@@ -249,6 +249,13 @@ client is built with an explicit adapter and a bare `new PrismaClient()` throws 
 **No component library.** React with one stylesheet and a small set of reusable classes. The
 interface is meant to read like a printed record, and a component library would have fought that the
 whole way.
+
+**The accent colour is taken from the artwork.** A release page samples its own cover in a canvas,
+bins the pixels by hue and picks the heaviest bin, then clamps it so the result stays legible on the
+background. That hex becomes `--tint` on `:root`, so the wordmark, the nav underline, the focus ring
+and the text selection all follow whatever record you are looking at. A black-and-white sleeve yields
+a neutral grey rather than an invented colour. Nothing is stored and no extra request is made, since
+the cover is already on the page.
 
 **The demo account resets on every visit.** A read-only demo cannot show the one thing worth showing,
 which is rating an album and watching the average move, so the data gets rebuilt whenever somebody

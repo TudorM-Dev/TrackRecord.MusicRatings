@@ -54,19 +54,39 @@ export default function AdminPage() {
   }
 
   if (!stats) {
-    return <p className="loading">{notice || "Loading…"}</p>;
+    if (!notice) return <p className="loading">Loading…</p>;
+    return (
+      <main className="page">
+        <div className="toolbar">
+          <div>
+            <h1>Admin</h1>
+            <p className="meta">This area needs an admin account.</p>
+          </div>
+        </div>
+        <div className="blank">
+          <p>Nothing to show here.</p>
+          <p>
+            The signed-in account does not have the admin role, so the server
+            answers as if the area did not exist.
+          </p>
+          <Link className="btn" to="/">
+            Back to your record
+          </Link>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="page">
-      <p className="eyebrow">admin</p>
-      <h1 className="headline">Everything, from above</h1>
+      <div className="toolbar">
+        <div>
+          <h1>Admin</h1>
+          <p className="meta">Everything in this instance, from above.</p>
+        </div>
+      </div>
 
       {notice && <p className="notice">{notice}</p>}
-
-      <div className="section-rule">
-        <h2>numbers</h2>
-      </div>
 
       <div className="stats">
         <Stat value={stats.users} label="users" />
@@ -82,7 +102,7 @@ export default function AdminPage() {
         />
       </div>
 
-      <div className="section-rule">
+      <div className="section">
         <h2>{users.length} users</h2>
       </div>
 
@@ -161,7 +181,7 @@ export default function AdminPage() {
         </table>
       </div>
 
-      <div className="section-rule">
+      <div className="section">
         <h2>{releases.length} releases</h2>
       </div>
 

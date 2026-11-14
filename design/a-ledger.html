@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrackRecord — Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#efeae0; --paper-2:#e6e0d3; --ink:#191714; --ink-2:#554f45;
+  --rule:#cdc5b5; --hard:#191714; --accent:#9c3b20; --good:#3b6340;
+  --display:"Archivo",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--display);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+::selection{background:var(--ink);color:var(--paper)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+svg{display:block}
+.sheet{max-width:60rem;margin:0 auto;padding:0 1.5rem 4.5rem}
+
+.bar{border-bottom:1px solid var(--hard);background:var(--paper)}
+.bar-in{max-width:60rem;margin:0 auto;padding:.75rem 1.5rem;display:flex;align-items:baseline;gap:1.5rem}
+.mark{font-weight:900;font-stretch:112%;font-size:.9375rem;letter-spacing:-.02em;text-transform:uppercase}
+.mark i{font-style:normal;color:var(--accent)}
+.bar nav{margin-left:auto;display:flex;gap:1.125rem;flex-wrap:wrap}
+.bar nav a{font-family:var(--mono);font-size:.75rem;color:var(--ink-2);padding-bottom:2px;border-bottom:1px solid transparent}
+.bar nav a[aria-current]{color:var(--ink);border-bottom-color:var(--accent)}
+
+.head{padding:3rem 0 1.75rem;display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;flex-wrap:wrap}
+h1{font-weight:900;font-stretch:105%;font-size:clamp(2rem,5vw,2.75rem);line-height:1;letter-spacing:-.035em;margin:0}
+.handle{font-family:var(--mono);font-size:.8125rem;color:var(--ink-2);margin:.5rem 0 0}
+.tally{display:flex;gap:2rem;font-family:var(--mono);font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);text-align:right}
+.tally b{display:block;font-family:var(--mono);font-weight:700;font-size:1.5rem;font-variant-numeric:tabular-nums;color:var(--ink);letter-spacing:-.03em;line-height:1;margin-bottom:.25rem;text-transform:none}
+
+table{width:100%;border-collapse:collapse;font-size:.9375rem}
+thead th{font-family:var(--mono);font-weight:500;font-size:.6875rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);text-align:left;padding:0 0 .5rem;border-bottom:1px solid var(--hard)}
+thead th.n{text-align:right;padding-right:1.25rem}
+tbody tr{border-bottom:1px solid var(--rule)}
+tbody tr:hover{background:var(--paper-2)}
+td{padding:.625rem 0;vertical-align:middle}
+td.sc{width:4.75rem;text-align:right;padding-right:1.25rem;font-family:var(--mono);font-weight:700;font-size:1.0625rem;font-variant-numeric:tabular-nums lining-nums;letter-spacing:-.02em}
+td.ar{width:3.25rem}
+td.ar img{display:block;width:2.375rem;height:2.375rem;object-fit:cover;border:1px solid var(--hard);background:var(--paper-2)}
+.ttl{font-weight:600;letter-spacing:-.012em}
+.by{font-family:var(--mono);font-size:.75rem;color:var(--ink-2)}
+td.yr{width:4rem;text-align:right;font-family:var(--mono);font-size:.75rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+.rel{display:grid;grid-template-columns:17rem 1fr;gap:3rem;padding-top:3rem;align-items:start}
+.rel-art{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--hard);display:block;background:var(--paper-2)}
+.rel h2{font-weight:900;font-stretch:105%;font-size:clamp(1.75rem,4vw,2.5rem);line-height:1;letter-spacing:-.035em;margin:0}
+.rel .by{font-size:.875rem;margin-top:.5rem}
+.cat{font-family:var(--mono);font-size:.75rem;color:var(--ink-2);margin:0 0 .75rem;font-variant-numeric:tabular-nums}
+.avg{display:flex;align-items:baseline;gap:.625rem;margin:1.75rem 0;padding:.875rem 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.avg b{font-family:var(--mono);font-weight:700;font-size:1.5rem;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.avg span{font-family:var(--mono);font-size:.75rem;color:var(--ink-2)}
+
+.lab{font-family:var(--mono);font-size:.6875rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin:0 0 1rem}
+.ruler{position:relative;padding-top:2.5rem}
+.rv{position:absolute;top:0;left:0;font-family:var(--mono);font-weight:700;font-size:2rem;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em;color:var(--accent)}
+.rv em{font-style:normal;font-size:.75rem;font-weight:400;color:var(--ink-2);margin-left:.5rem;letter-spacing:0}
+.track{position:relative;height:2.5rem;border-bottom:1px solid var(--hard)}
+.tick{position:absolute;bottom:0;width:1px;height:.4375rem;background:var(--rule)}
+.tick.maj{height:.875rem;background:var(--ink-2)}
+.tn{position:absolute;bottom:1.125rem;font-family:var(--mono);font-size:.625rem;color:var(--ink-2);transform:translateX(-50%);font-variant-numeric:tabular-nums}
+.pin{position:absolute;bottom:-1px;width:2px;height:2.25rem;background:var(--accent)}
+.pin::after{content:"";position:absolute;top:-5px;left:-4px;width:10px;height:10px;background:var(--accent);transform:rotate(45deg)}
+.nudge{display:flex;gap:.5rem;margin-top:1.25rem;align-items:center;flex-wrap:wrap}
+.nudge button{font-family:var(--mono);font-size:.75rem;padding:.4rem .7rem;border:1px solid var(--hard)}
+.nudge button:hover{background:var(--ink);color:var(--paper)}
+.nudge .clr{margin-left:auto;color:var(--accent);border-color:currentColor}
+.nudge .clr:hover{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+
+.tl{margin-top:3rem;border-top:1px solid var(--hard)}
+.tr{display:grid;grid-template-columns:2rem 1fr auto;align-items:center;gap:1rem;padding:.4375rem 0;border-bottom:1px solid var(--rule)}
+.tr .no{font-family:var(--mono);font-size:.75rem;color:var(--ink-2);font-variant-numeric:tabular-nums;text-align:right}
+.tr .nm{font-size:.9375rem}
+.verd{display:flex;gap:.25rem}
+.verd button{width:1.75rem;height:1.75rem;display:grid;place-items:center;border:1px solid transparent;border-radius:2px;color:var(--ink-2)}
+.verd button:hover{border-color:var(--hard);color:var(--ink)}
+.verd button.k[aria-pressed=true]{background:var(--good);border-color:var(--good);color:var(--paper)}
+.verd button.c[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.tr.is-k .nm{font-weight:600}
+.tr.is-c .nm{color:var(--ink-2);text-decoration:line-through;text-decoration-color:var(--rule)}
+
+.plate{font-family:var(--mono);font-size:.6875rem;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);background:var(--ink);padding:.5rem 1.5rem}
+@media(max-width:52rem){
+  .rel{grid-template-columns:1fr;gap:1.75rem}
+  .rel-art{max-width:14rem}
+  .head{align-items:flex-start}
+  td.yr,th.yrh{display:none}
+}
+@media(max-width:26rem){
+  .sheet,.bar-in,.plate{padding-left:1rem;padding-right:1rem}
+  .tally{gap:1.25rem}
+  .tally b{font-size:1.25rem}
+  td.sc{width:3.75rem;padding-right:.75rem;font-size:1rem}
+  td.ar{width:2.75rem}
+  td.ar img{width:2rem;height:2rem}
+}
+</style>
+</head>
+<body>
+
+<div class="plate">Direction A — Ledger · the record</div>
+<header class="bar"><div class="bar-in">
+  <span class="mark">Track<i>Record</i></span>
+  <nav><a href="#" aria-current="page">record</a><a href="#">search</a><a href="#">friends</a><a href="#">log out</a></nav>
+</div></header>
+
+<main class="sheet">
+  <div class="head">
+    <div><h1>Demo Listener</h1><p class="handle">@demo · keeping score since July 2026</p></div>
+    <div class="tally">
+      <div><b>8</b>rated</div>
+      <div><b>8.53</b>average</div>
+      <div><b>1</b>friend</div>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th class="n">Score</th><th colspan="2">Release</th><th class="n yrh">Year</th></tr></thead>
+    <tbody>
+      <tr><td class="sc">10.00</td><td class="ar"><img src="https://cdn-images.dzcdn.net/images/cover/aa7e6de00b0810f5051aa60b489f58d8/1000x1000-000000-80-0-0.jpg" alt=""></td><td><div class="ttl">Blonde</div><div class="by">Frank Ocean</div></td><td class="yr">2016</td></tr>
+      <tr><td class="sc">9.75</td><td class="ar"><img src="https://cdn-images.dzcdn.net/images/cover/00dd0da365a94b1829302d6b7fec70e6/1000x1000-000000-80-0-0.jpg" alt=""></td><td><div class="ttl">To Pimp A Butterfly</div><div class="by">Kendrick Lamar</div></td><td class="yr">2015</td></tr>
+      <tr><td class="sc">9.50</td><td class="ar"><img src="https://cdn-images.dzcdn.net/images/cover/742aba8510ba803bea51d304cf2ca786/1000x1000-000000-80-0-0.jpg" alt=""></td><td><div class="ttl">My Beautiful Dark Twisted Fantasy</div><div class="by">Kanye West</div></td><td class="yr">2010</td></tr>
+      <tr><td class="sc">9.00</td><td class="ar"><img src="https://cdn-images.dzcdn.net/images/cover/a175af9b7d329bc678cb4d26fc13d6de/1000x1000-000000-80-0-0.jpg" alt=""></td><td><div class="ttl">In Rainbows</div><div class="by">Radiohead</div></td><td class="yr">2007</td></tr>
+      <tr><td class="sc">8.50</td><td class="ar"><img src="https://cdn-images.dzcdn.net/images/cover/217f6c70913d113d09a561cb17b64f6e/1000x1000-000000-80-0-0.jpg" alt=""></td><td><div class="ttl">loveless</div><div class="by">my bloody valentine</div></td><td class="yr">2003</td></tr>
+      <tr><td class="sc">8.00</td><td class="ar"><img src="https://cdn-images.dzcdn.net/images/cover/de9e79511cda59914de9add50946e43c/1000x1000-000000-80-0-0.jpg" alt=""></td><td><div class="ttl">BRAT</div><div class="by">Charli xcx</div></td><td class="yr">2024</td></tr>
+      <tr><td class="sc">7.00</td><td class="ar"><img src="https://cdn-images.dzcdn.net/images/cover/311bba0fc112d15f72c8b5a65f0456c1/1000x1000-000000-80-0-0.jpg" alt=""></td><td><div class="ttl">Random Access Memories</div><div class="by">Daft Punk</div></td><td class="yr">2013</td></tr>
+      <tr><td class="sc">6.50</td><td class="ar"><img src="https://cdn-images.dzcdn.net/images/cover/de5b9b704cd4ec36f8bf49beb3e17ba2/1000x1000-000000-80-0-0.jpg" alt=""></td><td><div class="ttl">Currents</div><div class="by">Tame Impala</div></td><td class="yr">2015</td></tr>
+    </tbody>
+  </table>
+</main>
+
+<div class="plate">Direction A — Ledger · one release</div>
+<main class="sheet">
+  <div class="rel">
+    <img class="rel-art" src="https://cdn-images.dzcdn.net/images/cover/de9e79511cda59914de9add50946e43c/1000x1000-000000-80-0-0.jpg" alt="BRAT by Charli xcx">
+    <div>
+      <p class="cat">Album · 2024 · 15 tracks</p>
+      <h2>BRAT</h2>
+      <p class="by">Charli xcx</p>
+
+      <div class="avg"><b>8.50</b><span>average of 2 scores</span></div>
+
+      <p class="lab">Your score</p>
+      <div class="ruler">
+        <div class="rv">8.00<em>of 10</em></div>
+        <div class="track">
+          <span class="tick maj" style="left:0"></span><span class="tn" style="left:0">1</span>
+          <span class="tick" style="left:11.1%"></span><span class="tick" style="left:22.2%"></span>
+          <span class="tick maj" style="left:33.3%"></span><span class="tn" style="left:33.3%">4</span>
+          <span class="tick" style="left:44.4%"></span><span class="tick" style="left:55.5%"></span>
+          <span class="tick maj" style="left:66.6%"></span><span class="tn" style="left:66.6%">7</span>
+          <span class="tick" style="left:77.7%"></span><span class="tick" style="left:88.8%"></span>
+          <span class="tick maj" style="left:99.8%"></span><span class="tn" style="left:99%">10</span>
+          <span class="pin" style="left:77.7%"></span>
+        </div>
+        <div class="nudge">
+          <button type="button">&minus;0.25</button><button type="button">+0.25</button>
+          <button type="button" class="clr">Remove my score</button>
+        </div>
+      </div>
+
+      <div class="tl">
+        <div class="tr is-k"><span class="no">1</span><span class="nm">360</span><span class="verd"><button class="k" aria-pressed="true" aria-label="Keep 360"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="false" aria-label="Cut 360"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+        <div class="tr"><span class="no">2</span><span class="nm">Club classics</span><span class="verd"><button class="k" aria-pressed="false" aria-label="Keep Club classics"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="false" aria-label="Cut Club classics"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+        <div class="tr is-k"><span class="no">3</span><span class="nm">Sympathy is a knife</span><span class="verd"><button class="k" aria-pressed="true" aria-label="Keep Sympathy is a knife"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="false" aria-label="Cut Sympathy is a knife"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+        <div class="tr is-c"><span class="no">4</span><span class="nm">I might say something stupid</span><span class="verd"><button class="k" aria-pressed="false" aria-label="Keep I might say something stupid"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="true" aria-label="Cut I might say something stupid"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+        <div class="tr"><span class="no">5</span><span class="nm">Talk talk</span><span class="verd"><button class="k" aria-pressed="false" aria-label="Keep Talk talk"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="false" aria-label="Cut Talk talk"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+        <div class="tr is-k"><span class="no">6</span><span class="nm">Von dutch</span><span class="verd"><button class="k" aria-pressed="true" aria-label="Keep Von dutch"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="false" aria-label="Cut Von dutch"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrackRecord — Sleeve</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0b0a; --bg-2:#141210; --line:#2a2622; --line-2:#1d1a17;
+  --text:#f6f2ea; --mute:#9d9486; --accent:#e8a33d;
+  --display:"Archivo",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--display);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:#17120a}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+img{display:block}
+svg{display:block}
+.wrap{max-width:66rem;margin:0 auto;padding:0 1.5rem 4.5rem}
+
+.bar{border-bottom:1px solid var(--line);background:var(--bg)}
+.bar-in{max-width:66rem;margin:0 auto;padding:.8125rem 1.5rem;display:flex;align-items:baseline;gap:1.5rem}
+.mark{font-weight:900;font-stretch:115%;font-size:.9375rem;letter-spacing:-.025em;text-transform:uppercase}
+.mark i{font-style:normal;color:var(--accent)}
+.bar nav{margin-left:auto;display:flex;gap:1.125rem;flex-wrap:wrap}
+.bar nav a{font-family:var(--mono);font-size:.75rem;color:var(--mute);padding-bottom:2px;border-bottom:1px solid transparent}
+.bar nav a[aria-current]{color:var(--text);border-bottom-color:var(--accent)}
+
+.head{padding:3.25rem 0 2rem;display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;flex-wrap:wrap}
+h1{font-weight:900;font-stretch:112%;font-size:clamp(2.25rem,6vw,3.25rem);line-height:.95;letter-spacing:-.04em;margin:0}
+.handle{font-family:var(--mono);font-size:.8125rem;color:var(--mute);margin:.625rem 0 0}
+.tally{display:flex;gap:1.75rem;font-family:var(--mono);font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.tally b{display:block;font-family:var(--mono);font-weight:700;font-size:1.375rem;font-variant-numeric:tabular-nums;color:var(--text);letter-spacing:-.03em;line-height:1;margin-bottom:.3125rem;text-transform:none}
+
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.125rem}
+.tile{position:relative;display:block;aspect-ratio:1;background:var(--bg-2);overflow:hidden;border:1px solid var(--line-2)}
+.tile img{width:100%;height:100%;object-fit:cover;transition:transform .5s cubic-bezier(.16,1,.3,1),filter .3s ease}
+.tile::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(6,5,5,.96) 0%,rgba(6,5,5,.86) 18%,rgba(6,5,5,.4) 42%,rgba(6,5,5,0) 66%);pointer-events:none}
+.tile:hover img,.tile:focus-visible img{transform:scale(1.045)}
+.tile-sc{position:absolute;left:.75rem;bottom:.625rem;z-index:2;font-family:var(--mono);font-weight:700;font-size:1.75rem;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.04em;color:var(--text);padding-bottom:.3125rem;border-bottom:2px solid var(--tint,var(--accent))}
+.tile-nm{position:absolute;left:.8125rem;right:.75rem;bottom:2.75rem;z-index:2;opacity:0;transform:translateY(5px);transition:opacity .25s ease,transform .25s cubic-bezier(.16,1,.3,1)}
+.tile:hover .tile-nm,.tile:focus-visible .tile-nm{opacity:1;transform:none}
+.tile-nm b{display:block;font-size:.8125rem;font-weight:600;letter-spacing:-.01em;line-height:1.25;text-shadow:0 1px 8px rgba(0,0,0,.8)}
+.tile-nm span{font-family:var(--mono);font-size:.6875rem;color:#cdc4b6;text-shadow:0 1px 8px rgba(0,0,0,.8)}
+
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero-bg{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(44px) saturate(1.25);opacity:.5}
+.hero-veil{position:absolute;inset:0;background:linear-gradient(to right,rgba(10,9,8,.96) 0%,rgba(10,9,8,.8) 46%,rgba(10,9,8,.55) 100%)}
+.hero-in{position:relative;max-width:66rem;margin:0 auto;padding:3rem 1.5rem;display:grid;grid-template-columns:19rem 1fr;gap:3rem;align-items:center}
+.hero-art{width:100%;aspect-ratio:1;object-fit:cover;box-shadow:0 26px 60px -18px rgba(0,0,0,.82)}
+.cat{font-family:var(--mono);font-size:.75rem;color:var(--mute);margin:0 0 .875rem;font-variant-numeric:tabular-nums}
+.hero h2{font-weight:900;font-stretch:115%;font-size:clamp(2.5rem,7vw,4.25rem);line-height:.9;letter-spacing:-.045em;margin:0}
+.hero .by{font-family:var(--mono);font-size:.9375rem;color:var(--mute);margin:.875rem 0 0}
+.nums{display:flex;gap:2.5rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(246,242,234,.16)}
+.nums div{font-family:var(--mono);font-size:.6875rem;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.nums b{display:block;font-family:var(--mono);font-weight:700;font-size:2.25rem;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.045em;margin-bottom:.375rem;text-transform:none}
+.nums .mine b{color:var(--tint)}
+
+.sec{display:flex;align-items:center;gap:1rem;margin:3rem 0 1.25rem}
+.sec h3{font-family:var(--mono);font-size:.6875rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:0;white-space:nowrap}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.dial{max-width:34rem}
+.dial-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.875rem}
+.dial-v{font-family:var(--mono);font-weight:700;font-size:2.5rem;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.045em;color:var(--tint)}
+.dial-v em{font-style:normal;font-size:.75rem;font-weight:400;color:var(--mute);margin-left:.625rem;letter-spacing:0}
+.dial-hint{font-family:var(--mono);font-size:.6875rem;color:var(--mute)}
+.bandwrap{position:relative;height:3rem;border:1px solid var(--line);background:var(--bg-2)}
+.band{position:absolute;inset:0;width:77.7%;background:linear-gradient(to right,rgba(232,163,61,.14),var(--tint))}
+.knob{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--text);left:77.7%;transform:translateX(-50%)}
+.scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.625rem;color:var(--mute);margin-top:.5rem;font-variant-numeric:tabular-nums}
+.acts{display:flex;gap:.5rem;margin-top:1.25rem;flex-wrap:wrap}
+.acts button{font-family:var(--mono);font-size:.75rem;padding:.45rem .8rem;border:1px solid var(--line)}
+.acts button:hover{border-color:var(--mute)}
+.acts .clr{margin-left:auto;color:#ef8279;border-color:rgba(239,130,121,.45)}
+.acts .clr:hover{background:#ef8279;color:#1a0f0d;border-color:#ef8279}
+
+.tl{border-top:1px solid var(--line)}
+.tr{display:grid;grid-template-columns:2rem 1fr auto;align-items:center;gap:1rem;padding:.5rem 0;border-bottom:1px solid var(--line-2)}
+.tr .no{font-family:var(--mono);font-size:.75rem;color:var(--mute);font-variant-numeric:tabular-nums;text-align:right}
+.tr .nm{font-size:.9375rem}
+.verd{display:flex;gap:.3125rem}
+.verd button{width:1.875rem;height:1.875rem;display:grid;place-items:center;border:1px solid var(--line);border-radius:2px;color:var(--mute)}
+.verd button:hover{border-color:var(--mute);color:var(--text)}
+.verd button.k[aria-pressed=true]{background:#5f9a64;border-color:#5f9a64;color:#0b140c}
+.verd button.c[aria-pressed=true]{background:#ef8279;border-color:#ef8279;color:#1a0f0d}
+.tr.is-k .nm{font-weight:600}
+.tr.is-c .nm{color:var(--mute);text-decoration:line-through;text-decoration-color:var(--line)}
+
+.plate{font-family:var(--mono);font-size:.6875rem;letter-spacing:.12em;text-transform:uppercase;color:#0c0b0a;background:var(--accent);padding:.5rem 1.5rem}
+@media(max-width:60rem){ .grid{grid-template-columns:repeat(3,1fr)} }
+@media(max-width:46rem){
+  .hero-in{grid-template-columns:1fr;gap:1.75rem;padding:2.25rem 1.5rem}
+  .hero-art{max-width:13rem}
+  .nums{gap:1.75rem}
+}
+@media(max-width:34rem){ .grid{grid-template-columns:repeat(2,1fr);gap:.75rem} }
+@media(max-width:26rem){
+  .wrap,.bar-in,.plate,.hero-in{padding-left:1rem;padding-right:1rem}
+  .tally{gap:1.25rem}
+  .tile-sc{font-size:1.375rem;left:.5rem;bottom:.4375rem}
+  .tile-nm{left:.5625rem;right:.5rem;bottom:2.25rem}
+  .nums b{font-size:1.75rem}
+}
+</style>
+</head>
+<body>
+
+<div class="plate">Direction B — Sleeve · the record</div>
+<header class="bar"><div class="bar-in">
+  <span class="mark">Track<i>Record</i></span>
+  <nav><a href="#" aria-current="page">record</a><a href="#">search</a><a href="#">friends</a><a href="#">log out</a></nav>
+</div></header>
+
+<main class="wrap">
+  <div class="head">
+    <div><h1>Demo Listener</h1><p class="handle">@demo · keeping score since July 2026</p></div>
+    <div class="tally">
+      <div><b>8</b>rated</div><div><b>8.53</b>average</div><div><b>1</b>friend</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <a class="tile" href="#" style="--tint:#f2e9c9"><img src="https://cdn-images.dzcdn.net/images/cover/aa7e6de00b0810f5051aa60b489f58d8/1000x1000-000000-80-0-0.jpg" alt="Blonde by Frank Ocean"><span class="tile-nm"><b>Blonde</b><span>Frank Ocean · 2016</span></span><span class="tile-sc">10</span></a>
+    <a class="tile" href="#" style="--tint:#e3d9c4"><img src="https://cdn-images.dzcdn.net/images/cover/00dd0da365a94b1829302d6b7fec70e6/1000x1000-000000-80-0-0.jpg" alt="To Pimp A Butterfly by Kendrick Lamar"><span class="tile-nm"><b>To Pimp A Butterfly</b><span>Kendrick Lamar · 2015</span></span><span class="tile-sc">9.75</span></a>
+    <a class="tile" href="#" style="--tint:#e0554a"><img src="https://cdn-images.dzcdn.net/images/cover/742aba8510ba803bea51d304cf2ca786/1000x1000-000000-80-0-0.jpg" alt="My Beautiful Dark Twisted Fantasy by Kanye West"><span class="tile-nm"><b>My Beautiful Dark Twisted Fantasy</b><span>Kanye West · 2010</span></span><span class="tile-sc">9.5</span></a>
+    <a class="tile" href="#" style="--tint:#f0b054"><img src="https://cdn-images.dzcdn.net/images/cover/a175af9b7d329bc678cb4d26fc13d6de/1000x1000-000000-80-0-0.jpg" alt="In Rainbows by Radiohead"><span class="tile-nm"><b>In Rainbows</b><span>Radiohead · 2007</span></span><span class="tile-sc">9</span></a>
+    <a class="tile" href="#" style="--tint:#e58bb4"><img src="https://cdn-images.dzcdn.net/images/cover/217f6c70913d113d09a561cb17b64f6e/1000x1000-000000-80-0-0.jpg" alt="loveless by my bloody valentine"><span class="tile-nm"><b>loveless</b><span>my bloody valentine · 2003</span></span><span class="tile-sc">8.5</span></a>
+    <a class="tile" href="#" style="--tint:#97d700"><img src="https://cdn-images.dzcdn.net/images/cover/de9e79511cda59914de9add50946e43c/1000x1000-000000-80-0-0.jpg" alt="BRAT by Charli xcx"><span class="tile-nm"><b>BRAT</b><span>Charli xcx · 2024</span></span><span class="tile-sc">8</span></a>
+    <a class="tile" href="#" style="--tint:#c9a66b"><img src="https://cdn-images.dzcdn.net/images/cover/311bba0fc112d15f72c8b5a65f0456c1/1000x1000-000000-80-0-0.jpg" alt="Random Access Memories by Daft Punk"><span class="tile-nm"><b>Random Access Memories</b><span>Daft Punk · 2013</span></span><span class="tile-sc">7</span></a>
+    <a class="tile" href="#" style="--tint:#d9774e"><img src="https://cdn-images.dzcdn.net/images/cover/de5b9b704cd4ec36f8bf49beb3e17ba2/1000x1000-000000-80-0-0.jpg" alt="Currents by Tame Impala"><span class="tile-nm"><b>Currents</b><span>Tame Impala · 2015</span></span><span class="tile-sc">6.5</span></a>
+  </div>
+</main>
+
+<div class="plate">Direction B — Sleeve · one release</div>
+<section class="hero" style="--tint:#97d700">
+  <div class="hero-bg" style="background-image:url(https://cdn-images.dzcdn.net/images/cover/de9e79511cda59914de9add50946e43c/1000x1000-000000-80-0-0.jpg)"></div>
+  <div class="hero-veil"></div>
+  <div class="hero-in">
+    <img class="hero-art" src="https://cdn-images.dzcdn.net/images/cover/de9e79511cda59914de9add50946e43c/1000x1000-000000-80-0-0.jpg" alt="BRAT by Charli xcx">
+    <div>
+      <p class="cat">Album · 2024 · 15 tracks</p>
+      <h2>BRAT</h2>
+      <p class="by">Charli xcx</p>
+      <div class="nums">
+        <div class="mine"><b>8.00</b>your score</div>
+        <div><b>8.50</b>average of 2</div>
+        <div><b>3</b>tracks you&rsquo;d cut</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main class="wrap" style="--tint:#97d700">
+  <div class="sec"><h3>Your score</h3></div>
+  <div class="dial">
+    <div class="dial-top">
+      <span class="dial-v">8.00<em>of 10</em></span>
+      <span class="dial-hint">drag, or nudge by 0.25</span>
+    </div>
+    <div class="bandwrap"><span class="band"></span><span class="knob"></span></div>
+    <div class="scale"><span>1</span><span>5</span><span>10</span></div>
+    <div class="acts">
+      <button type="button">&minus;0.25</button><button type="button">+0.25</button>
+      <button type="button" class="clr">Remove my score</button>
+    </div>
+  </div>
+
+  <div class="sec"><h3>Track by track · 3 kept · 1 cut</h3></div>
+  <div class="tl">
+    <div class="tr is-k"><span class="no">1</span><span class="nm">360</span><span class="verd"><button class="k" aria-pressed="true" aria-label="Keep 360"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="false" aria-label="Cut 360"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+    <div class="tr"><span class="no">2</span><span class="nm">Club classics</span><span class="verd"><button class="k" aria-pressed="false" aria-label="Keep Club classics"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="false" aria-label="Cut Club classics"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+    <div class="tr is-k"><span class="no">3</span><span class="nm">Sympathy is a knife</span><span class="verd"><button class="k" aria-pressed="true" aria-label="Keep Sympathy is a knife"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="false" aria-label="Cut Sympathy is a knife"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+    <div class="tr is-c"><span class="no">4</span><span class="nm">I might say something stupid</span><span class="verd"><button class="k" aria-pressed="false" aria-label="Keep I might say something stupid"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="true" aria-label="Cut I might say something stupid"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+    <div class="tr"><span class="no">5</span><span class="nm">Talk talk</span><span class="verd"><button class="k" aria-pressed="false" aria-label="Keep Talk talk"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="false" aria-label="Cut Talk talk"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+    <div class="tr is-k"><span class="no">6</span><span class="nm">Von dutch</span><span class="verd"><button class="k" aria-pressed="true" aria-label="Keep Von dutch"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3.5 3.5L13 4.5"/></svg></button><button class="c" aria-pressed="false" aria-label="Cut Von dutch"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span></div>
+  </div>
+</main>
+
+</body>
+</html>
