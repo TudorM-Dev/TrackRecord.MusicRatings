@@ -56,7 +56,7 @@ h2{font-family:var(--display);font-weight:900;font-stretch:115%;font-size:3rem;l
 </head>
 <body>
 
-<p class="note"><b>Alege nivelul de negru.</b> Acelasi ecran, patru fundaluri. Culoarea verde e extrasa live din coperta, nu scrisa de mana. Spune-mi doar numarul.</p>
+<p class="note"><b>Background level.</b> The same release screen over four backgrounds. The green is pulled out of the cover art at runtime, so each row shows the real result rather than a guess.</p>
 
 <div id="stack"></div>
 
@@ -77,10 +77,10 @@ const COVERS=[
 const url=(id,px)=>`https://cdn-images.dzcdn.net/images/cover/${id}/${px}x${px}-000000-80-0-0.jpg`;
 
 const LEVELS=[
- {n:1,bg:"#000000",name:"pur negru",why:"referinta"},
- {n:2,bg:"#0c0b0a",name:"ce e in macheta acum",why:"foarte adanc, cald"},
- {n:3,bg:"#141210",name:"ridicat, cald",why:"in jurul recomandarii Material"},
- {n:4,bg:"#1a1714",name:"ridicat mai mult",why:"vizibil gri, cel mai bland"}
+ {n:1,bg:"#000000",name:"true black",why:"reference point"},
+ {n:2,bg:"#0c0b0a",name:"very deep, warm",why:"first pass"},
+ {n:3,bg:"#141210",name:"lifted, warm",why:"shipped"},
+ {n:4,bg:"#1a1714",name:"lifted further",why:"reads as grey"}
 ];
 
 function rgb2hsl(r,g,b){r/=255;g/=255;b/=255;

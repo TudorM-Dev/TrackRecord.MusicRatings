@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import type { FriendRequest, PublicUser } from "../types";
 
+function initialOf(name: string | undefined) {
+  return (name ?? "?").trim().charAt(0) || "?";
+}
+
 export default function FriendsPage() {
   const [friends, setFriends] = useState<PublicUser[]>([]);
   const [received, setReceived] = useState<FriendRequest[]>([]);
@@ -10,6 +14,7 @@ export default function FriendsPage() {
   const [username, setUsername] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
@@ -23,6 +28,8 @@ export default function FriendsPage() {
       setSent(outgoing);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Could not load friends");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -53,22 +60,45 @@ export default function FriendsPage() {
 
   return (
     <main className="page">
-      <p className="eyebrow">friends</p>
-      <h1 className="headline">Who else is keeping score?</h1>
+      <div className="toolbar">
+        <div>
+          <h1>Friends</h1>
+          <p className="meta">
+            {loading
+              ? "Loading…"
+              : friends.length === 0
+                ? "Only accepted friends can open your record."
+                : `${friends.length} ${friends.length === 1 ? "person" : "people"} can see your record.`}
+          </p>
+        </div>
+      </div>
 
-      <form
-        className="searchbar"
-        onSubmit={send}
-        style={{ marginTop: "1.75rem" }}
-      >
+      <form className="finder" onSubmit={send}>
         <input
-          placeholder="Username"
+          placeholder="Add someone by username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          aria-label="Username"
+          aria-label="Add someone by username"
         />
-        <button className="btn" type="submit" disabled={busy}>
-          Send request
+        <button
+          type="submit"
+          className="finder-clear"
+          disabled={busy || !username.trim()}
+          aria-label="Send friend request"
+          style={{ opacity: username.trim() ? 1 : 0.4 }}
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="square"
+            aria-hidden="true"
+          >
+            <path d="M3 8h10M9 4l4 4-4 4" />
+          </svg>
         </button>
       </form>
 
@@ -76,28 +106,31 @@ export default function FriendsPage() {
 
       {received.length > 0 && (
         <>
-          <div className="section-rule">
+          <div className="section">
             <h2>waiting for you</h2>
           </div>
-          <div className="people">
+          <div className="requests">
             {received.map((request, index) => (
               <div
                 key={request.id}
-                className="person"
-                style={{ animationDelay: `${index * 28}ms` }}
+                className="request"
+                style={{ animationDelay: `${index * 30}ms` }}
               >
-                <div>
+                <span className="initial" aria-hidden="true">
+                  {initialOf(request.requester?.displayName)}
+                </span>
+                <span className="card-person-body">
                   <Link
-                    className="person-name"
                     to={`/users/${request.requester?.username}`}
+                    style={{ fontWeight: 600 }}
                   >
                     {request.requester?.displayName}
                   </Link>
-                  <div className="person-handle">
+                  <span style={{ display: "block" }}>
                     @{request.requester?.username}
-                  </div>
-                </div>
-                <div className="actions">
+                  </span>
+                </span>
+                <span className="actions">
                   <button
                     className="btn small"
                     disabled={busy}
@@ -120,7 +153,7 @@ export default function FriendsPage() {
                   >
                     Decline
                   </button>
-                </div>
+                </span>
               </div>
             ))}
           </div>
@@ -129,28 +162,31 @@ export default function FriendsPage() {
 
       {sent.length > 0 && (
         <>
-          <div className="section-rule">
+          <div className="section">
             <h2>waiting on them</h2>
           </div>
-          <div className="people">
+          <div className="requests">
             {sent.map((request, index) => (
               <div
                 key={request.id}
-                className="person"
-                style={{ animationDelay: `${index * 28}ms` }}
+                className="request"
+                style={{ animationDelay: `${index * 30}ms` }}
               >
-                <div>
+                <span className="initial" aria-hidden="true">
+                  {initialOf(request.receiver?.displayName)}
+                </span>
+                <span className="card-person-body">
                   <Link
-                    className="person-name"
                     to={`/users/${request.receiver?.username}`}
+                    style={{ fontWeight: 600 }}
                   >
                     {request.receiver?.displayName}
                   </Link>
-                  <div className="person-handle">
+                  <span style={{ display: "block" }}>
                     @{request.receiver?.username}
-                  </div>
-                </div>
-                <div className="actions">
+                  </span>
+                </span>
+                <span className="actions">
                   <button
                     className="btn quiet small"
                     disabled={busy}
@@ -162,35 +198,53 @@ export default function FriendsPage() {
                   >
                     Cancel
                   </button>
-                </div>
+                </span>
               </div>
             ))}
           </div>
         </>
       )}
 
-      <div className="section-rule">
-        <h2>{friends.length} friend{friends.length === 1 ? "" : "s"}</h2>
+      <div className="section">
+        <h2>
+          {friends.length} friend{friends.length === 1 ? "" : "s"}
+        </h2>
       </div>
 
-      {friends.length === 0 ? (
+      {loading ? (
+        <div className="cards">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div
+              key={i}
+              className="skeleton"
+              style={{ height: "4.5rem", borderRadius: 2 }}
+            />
+          ))}
+        </div>
+      ) : friends.length === 0 ? (
         <div className="blank">
-          <p>No friends yet.</p>
-          <p>Send a request above to compare records.</p>
+          <p>Nobody can see your record yet.</p>
+          <p>
+            Add someone by username above. They have to accept before either of
+            you can open the other&rsquo;s profile.
+          </p>
         </div>
       ) : (
-        <div className="people">
+        <div className="cards">
           {friends.map((friend, index) => (
             <Link
               key={friend.id}
-              className="person"
+              className="card-person"
               to={`/users/${friend.username}`}
-              style={{ animationDelay: `${index * 28}ms` }}
+              style={{ animationDelay: `${index * 30}ms` }}
             >
-              <div>
-                <div className="person-name">{friend.displayName}</div>
-                <div className="person-handle">@{friend.username}</div>
-              </div>
+              <span className="initial" aria-hidden="true">
+                {initialOf(friend.displayName)}
+              </span>
+              <span className="card-person-body">
+                <b>{friend.displayName}</b>
+                <span>@{friend.username}</span>
+              </span>
             </Link>
           ))}
         </div>

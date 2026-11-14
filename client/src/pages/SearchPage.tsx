@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, isAbort } from "../api";
-import Entry from "../components/Entry";
+import Sleeve from "../components/Sleeve";
 import type { MusicResult, Release } from "../types";
 
 const MIN_LENGTH = 2;
@@ -14,6 +14,7 @@ export default function SearchPage() {
   const [term, setTerm] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [opening, setOpening] = useState("");
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -52,6 +53,8 @@ export default function SearchPage() {
   }, [query]);
 
   async function open(result: MusicResult) {
+    setOpening(result.externalId);
+    setNotice("");
     try {
       const release = await api.post<Release>("/api/releases", {
         externalId: result.externalId,
@@ -59,59 +62,96 @@ export default function SearchPage() {
       navigate(`/releases/${release.id}`);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Could not open that one");
+      setOpening("");
     }
   }
 
   const empty = term && results.length === 0 && !busy;
+  const idle = query.trim().length < MIN_LENGTH;
 
   return (
     <main className="page">
-      <p className="eyebrow">search</p>
-      <h1 className="headline">What did you listen to?</h1>
+      <div className="toolbar">
+        <div>
+          <h1>Search</h1>
+          <p className="meta">Albums and singles, straight from the catalogue.</p>
+        </div>
+      </div>
 
-      <div className="searchbar" style={{ marginTop: "1.75rem" }}>
+      <div className="finder">
         <input
           type="search"
-          placeholder="Album or track"
+          placeholder="Album, single or artist"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          aria-label="Album or track"
+          aria-label="Album, single or artist"
           autoFocus
         />
+        {busy && <span className="finder-status">searching</span>}
+        {query && (
+          <button
+            type="button"
+            className="finder-clear"
+            aria-label="Clear search"
+            onClick={() => setQuery("")}
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="square"
+              aria-hidden="true"
+            >
+              <path d="M4 4l8 8M12 4l-8 8" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {notice && <p className="notice">{notice}</p>}
 
-      {(results.length > 0 || busy) && (
-        <div className="section-rule">
-          <h2>
-            {busy
-              ? "searching"
-              : `${results.length} result${results.length === 1 ? "" : "s"}`}
-          </h2>
+      {idle && (
+        <div className="blank" style={{ marginTop: "2.5rem" }}>
+          <p>Type at least two letters.</p>
+          <p>Artist names work better than album titles.</p>
         </div>
       )}
 
-      {results.length > 0 && (
-        <div className="record">
-          {results.map((result, index) => (
-            <Entry
-              key={result.externalId}
-              index={index}
-              coverUrl={result.coverUrl}
-              title={result.title}
-              subtitle={`${result.artist}${result.releaseYear ? ` · ${result.releaseYear}` : ""}`}
-              tag={result.kind}
-              onClick={() => void open(result)}
-            />
-          ))}
-        </div>
+      {!idle && results.length > 0 && (
+        <>
+          <div className="section">
+            <h2>
+              {results.length} result{results.length === 1 ? "" : "s"}
+              {term && ` for “${term}”`}
+            </h2>
+          </div>
+
+          <div className="sleeves">
+            {results.map((result, index) => (
+              <Sleeve
+                key={result.externalId}
+                index={index}
+                to=""
+                onOpen={() => void open(result)}
+                coverUrl={result.coverUrl}
+                title={result.title}
+                artist={result.artist}
+                year={result.releaseYear}
+                showName
+                pending={opening === result.externalId}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       {empty && (
-        <div className="blank" style={{ marginTop: "2rem" }}>
+        <div className="blank" style={{ marginTop: "2.5rem" }}>
           <p>Nothing found for “{term}”.</p>
-          <p>Try the artist name instead.</p>
+          <p>Try the artist name on its own.</p>
         </div>
       )}
     </main>

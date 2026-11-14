@@ -11,6 +11,9 @@ type SleeveProps = {
   year?: number;
   score?: number | null;
   index?: number;
+  showName?: boolean;
+  pending?: boolean;
+  onOpen?: () => void;
 };
 
 export default function Sleeve({
@@ -21,6 +24,9 @@ export default function Sleeve({
   year,
   score,
   index = 0,
+  showName = false,
+  pending = false,
+  onOpen,
 }: SleeveProps) {
   const tint = useTint(coverUrl);
 
@@ -29,8 +35,8 @@ export default function Sleeve({
     animationDelay: `${Math.min(index, 11) * 35}ms`,
   } as CSSProperties;
 
-  return (
-    <Link className="sleeve" to={to} style={style}>
+  const inner = (
+    <>
       <img
         src={coverUrl || undefined}
         alt=""
@@ -47,6 +53,29 @@ export default function Sleeve({
       {score !== null && score !== undefined && (
         <span className="sleeve-score">{formatScoreShort(score)}</span>
       )}
+      {pending && <span className="sleeve-pending">Opening…</span>}
+    </>
+  );
+
+  const className = "sleeve" + (showName ? " is-plain" : "");
+
+  if (onOpen) {
+    return (
+      <button
+        type="button"
+        className={className}
+        style={style}
+        onClick={onOpen}
+        aria-label={`${title} by ${artist}`}
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return (
+    <Link className={className} to={to} style={style}>
+      {inner}
     </Link>
   );
 }
