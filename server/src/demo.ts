@@ -10,14 +10,14 @@ const FRIEND_EMAIL = "TudorMutica@trackrecord.local";
 type Seed = { query: string; mine: number; theirs: number };
 
 const SEEDS: Seed[] = [
-  {
-    query: "My Beautiful Dark Twisted Fantasy Kanye West",
-    mine: 9.5,
-    theirs: 8,
-  },
+  { query: "Illmatic Nas", mine: 9.5, theirs: 8 },
   { query: "Blonde Frank Ocean", mine: 10, theirs: 9.25 },
   { query: "In Rainbows Radiohead", mine: 9, theirs: 9.5 },
-  { query: "To Pimp A Butterfly Kendrick Lamar", mine: 9.75, theirs: 10 },
+  {
+    query: "The Dark Side of the Moon Pink Floyd",
+    mine: 9.75,
+    theirs: 10,
+  },
   { query: "Loveless My Bloody Valentine", mine: 8.5, theirs: 6 },
   { query: "Random Access Memories Daft Punk", mine: 7, theirs: 8.75 },
   { query: "Currents Tame Impala", mine: 6.5, theirs: 7.5 },
