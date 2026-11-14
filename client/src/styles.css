@@ -183,7 +183,6 @@ svg {
 
 .wordmark span {
   color: var(--tint);
-  transition: color 0.45s var(--ease);
 }
 
 .masthead nav {
